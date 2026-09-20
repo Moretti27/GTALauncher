@@ -1,4 +1,4 @@
-# ICQ Reborn Server v0.30
+# ICQ Reborn Server v0.32
 
 ICQ Reborn uses a PC-hosted Node.js server on TCP port **22005**.
 
@@ -48,3 +48,26 @@ The current direct-IP deployment uses HTTP/WS, so traffic is not encrypted in tr
 ## Calls
 
 Audio/video calls use WebRTC. Some restrictive mobile networks may still require a TURN server for reliable calls.
+
+
+## VIP support
+
+The Host includes `server/support.json` with the configured YooMoney receiver.
+
+On first server start, ICQ Reborn creates:
+
+```
+server/data/yoomoney_notification_secret.txt
+```
+
+To enable automatic VIP activation, configure YooMoney HTTP notifications to:
+
+```
+http://31.135.108.120:22005/api/support/yoomoney
+```
+
+Use the exact secret from `server/data/yoomoney_notification_secret.txt` in the YooMoney HTTP-notification settings.
+
+Payments started from ICQ Reborn include a unique label tied to the current UIN. The server verifies the YooMoney HMAC-SHA256 signature before granting VIP.
+
+Users can pay from a YooMoney wallet or by bank card through the YooMoney payment form.
