@@ -8,7 +8,7 @@ const jwt=require('jsonwebtoken');
 const crypto=require('crypto');
 const {WebSocketServer}=require('ws');
 
-const SUPPORT_FILE=path.join(__dirname,'data','support.json');
+const SUPPORT_FILE=path.join(__dirname,'support.json');
 function supportConfig(){
   try{return JSON.parse(fs.readFileSync(SUPPORT_FILE,'utf8'))}catch(_){return {}}
 }
