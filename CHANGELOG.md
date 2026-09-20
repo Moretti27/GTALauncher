@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.26.0-alpha
+
+- Reworked registration into a separate account-creation flow.
+- Registration data is stored persistently on the PC Host.
+- Added confirmation-password field and dedicated registration result screen.
+- Server returns a permanent 8-digit UIN after account creation.
+- Login is now a separate UIN + password flow.
+- Added server-side account metadata including phone number, creation time and last login time.
+- Passwords remain stored only as bcrypt hashes, never as plaintext.
+- Added db.json backup file during writes to reduce risk of account data loss.
+
 ## v0.25.0-alpha
 
 - Added offline cache for profile, contacts, groups and chat history.
