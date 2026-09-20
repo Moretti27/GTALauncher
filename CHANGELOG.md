@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.27.0-alpha
+
+- Added automatic public server discovery through server-config.json.
+- Removed manual server IP/port entry from normal Android user flow.
+- Android background sync now uses the same discovered public endpoint.
+- Added Cloudflare Tunnel Windows service setup for hosting the backend on a home PC.
+- Added PUBLIC_ACCESS.md with production public-access instructions.
+- Public endpoint can be changed centrally without rebuilding the APK.
+- Preserved local-network fallback for development/testing.
+
 ## v0.26.0-alpha
 
 - Reworked registration into a separate account-creation flow.
