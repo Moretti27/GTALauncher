@@ -42,7 +42,7 @@
 <script>
 'use strict';
 const $=x=>document.getElementById(x);
-let base=(localStorage.getItem('serverUrl')||'http://192.168.3.3:22005').replace(/\/$/,'');
+let savedServer=(localStorage.getItem('serverUrl')||'').replace(/\/$/,'');if(savedServer.endsWith(':8080'))savedServer=savedServer.replace(/:8080$/,':22005');let base=(savedServer||'http://192.168.3.3:22005').replace(/\/$/,'');localStorage.setItem('serverUrl',base);
 let token=localStorage.getItem('token')||'';
 let me=null,contacts=[],sel='',ws=null,pc=null,ls=null,rs=null,pendingCall=null;
 
@@ -140,10 +140,10 @@ async function checkServer(){
 $('checkServer').onclick=checkServer;
 $('useHomeServer').onclick=()=>{$('authServer').value='http://192.168.3.3:22005';checkServer()};
 $('loginBtn').onclick=async()=>{
-  try{base=$('authServer').value.trim().replace(/\/$/,'')||'http://192.168.3.3:22005';localStorage.setItem('serverUrl',base);const r=await api('/api/login',{method:'POST',body:JSON.stringify({uin:$('loginUin').value.trim(),password:$('loginPass').value})});token=r.token;localStorage.setItem('token',token);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}
+  try{base=$('authServer').value.trim().replace(/\/$/,'')||'http://192.168.3.3:22005';if(base.endsWith(':8080'))base=base.replace(/:8080$/,':22005');localStorage.setItem('serverUrl',base);if(!(await checkServer()))throw Error('Сервер недоступен');const r=await api('/api/login',{method:'POST',body:JSON.stringify({uin:$('loginUin').value.trim(),password:$('loginPass').value})});token=r.token;localStorage.setItem('token',token);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}
 };
 $('regBtn').onclick=async()=>{
-  try{base=$('authServer').value.trim().replace(/\/$/,'')||'http://192.168.3.3:22005';localStorage.setItem('serverUrl',base);const r=await api('/api/register',{method:'POST',body:JSON.stringify({nick:$('regNick').value.trim(),password:$('regPass').value})});token=r.token;localStorage.setItem('token',token);toast('Твой UIN: '+r.user.uin);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}
+  try{base=$('authServer').value.trim().replace(/\/$/,'')||'http://192.168.3.3:22005';if(base.endsWith(':8080'))base=base.replace(/:8080$/,':22005');localStorage.setItem('serverUrl',base);if(!(await checkServer()))throw Error('Сервер недоступен');const r=await api('/api/register',{method:'POST',body:JSON.stringify({nick:$('regNick').value.trim(),password:$('regPass').value})});token=r.token;localStorage.setItem('token',token);toast('Твой UIN: '+r.user.uin);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}
 };
 $('showReg').onclick=()=>{$('loginCard').classList.add('hide');$('regCard').classList.remove('hide')};
 $('showLogin').onclick=()=>{$('regCard').classList.add('hide');$('loginCard').classList.remove('hide')};
