@@ -15,8 +15,11 @@ import java.util.*;
 
 public class MainActivity extends Activity{
  WebView w; ValueCallback<Uri[]> fileCb; static final int FILE=43, CONTACTS_REQ=44;
+ volatile boolean appForeground=false;
  static final String MSG_CH="icq_retro_messages", CONTACT_CH="icq_retro_contacts", CALL_CH="icq_retro_calls";
 
+ protected void onResume(){super.onResume();appForeground=true;}
+ protected void onPause(){appForeground=false;super.onPause();}
  public void onCreate(Bundle b){
   super.onCreate(b); askBase();
   createChannels();
@@ -127,6 +130,7 @@ public class MainActivity extends Activity{
   runOnUiThread(()->{
    try{
     playRetro(type);
+    if(appForeground)return;
     if(Build.VERSION.SDK_INT>=33&&!ok(Manifest.permission.POST_NOTIFICATIONS))return;
     Intent i=new Intent(this,MainActivity.class);
     PendingIntent p=PendingIntent.getActivity(this,0,i,PendingIntent.FLAG_IMMUTABLE|PendingIntent.FLAG_UPDATE_CURRENT);
