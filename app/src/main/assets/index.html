@@ -31,7 +31,7 @@
 <div id="authView" class="wrap auth">
 <div style="font-size:56px;text-align:center">🌼</div><h2>ICQ <span style="color:var(--green)">Reborn</span></h2>
 <div class="card"><div class="sectionTitle">Подключение</div><div class="notice">ICQ Reborn автоматически подключается к основному серверу через интернет.</div><div id="serverCheckState" class="state" style="margin-top:8px">Проверяю сервер…</div></div>
-<div id="loginCard" class="card"><div class="sectionTitle">Вход</div><input id="loginUin" class="f" style="width:100%" placeholder="UIN"><input id="loginPass" class="f" type="password" style="width:100%;margin-top:8px" placeholder="Пароль"><label class="row" style="margin-top:9px;gap:7px"><input id="rememberLogin" type="checkbox"><span class="sub">Сохранить UIN и пароль · входить автоматически</span></label><div class="row" style="margin-top:8px"><button id="loginBtn" class="primary grow">Войти</button><button id="showReg" class="grow">Регистрация</button></div><div id="authState" class="state"></div></div>
+<div id="loginCard" class="card"><div class="sectionTitle">Вход</div><input id="loginUin" class="f" style="width:100%" placeholder="UIN"><input id="loginPass" class="f" type="password" style="width:100%;margin-top:8px" placeholder="Пароль"><div class="sub" style="margin-top:9px">После входа аккаунт останется сохранён на этом устройстве, пока ты сам не нажмёшь «Выйти».</div><div class="row" style="margin-top:8px"><button id="loginBtn" class="primary grow">Войти</button><button id="showReg" class="grow">Регистрация</button></div><div id="authState" class="state"></div></div>
 <div id="regCard" class="card hide"><div class="sectionTitle">Регистрация нового аккаунта</div><input id="regNick" class="f" style="width:100%" placeholder="Ник"><input id="regPhone" class="f" inputmode="tel" style="width:100%;margin-top:8px" placeholder="Номер телефона"><input id="regPass" class="f" type="password" style="width:100%;margin-top:8px" placeholder="Пароль, минимум 6 символов"><input id="regPass2" class="f" type="password" style="width:100%;margin-top:8px" placeholder="Повторите пароль"><div class="notice" style="margin-top:10px">После регистрации сервер создаст постоянный UIN. Для входа на другом устройстве понадобятся UIN и пароль.</div><div class="row" style="margin-top:8px"><button id="regBtn" class="primary grow">Создать аккаунт</button><button id="showLogin">Назад ко входу</button></div><div id="regState" class="state"></div></div>
 <div id="regDoneCard" class="card hide"><div class="sectionTitle">Аккаунт создан</div><div style="text-align:center;padding:8px 0"><div class="sub">Ваш UIN</div><div id="newUin" style="font-size:34px;font-weight:900;letter-spacing:.08em;color:var(--green)">00000000</div><div class="notice" style="margin-top:10px">Сохрани этот UIN. По нему можно войти в аккаунт на другом устройстве.</div></div><div class="row"><button id="copyNewUin" class="grow">Копировать UIN</button><button id="goLogin" class="primary grow">Войти по UIN</button></div></div>
 </div>
@@ -62,8 +62,8 @@ function storeGet(k){try{let v=NativeBridge.prefGet(k);if(v)return v}catch(_){}r
 function storeSet(k,v){try{NativeBridge.prefSet(k,v)}catch(_){}localStorage.setItem(k,v)}
 function storeRemove(k){try{NativeBridge.prefRemove(k)}catch(_){}localStorage.removeItem(k)}
 function ckey(k){return 'cache:'+(me?.uin||storeGet('uin')||'anon')+':'+k}
-function cacheGet(k,d=null){try{const v=localStorage.getItem(ckey(k));return v?JSON.parse(v):d}catch(_){return d}}
-function cacheSet(k,v){try{localStorage.setItem(ckey(k),JSON.stringify(v))}catch(_){}}
+function cacheGet(k,d=null){try{const key=ckey(k),v=storeGet(key)||localStorage.getItem(key)||'';return v?JSON.parse(v):d}catch(_){return d}}
+function cacheSet(k,v){try{const key=ckey(k),raw=JSON.stringify(v);storeSet(key,raw);localStorage.setItem(key,raw)}catch(_){}}
 function queueGet(){return cacheGet('queue',[])}
 function queueSet(q){cacheSet('queue',q)}
 function queuePush(a){const q=queueGet();q.push({...a,qid:'q'+Date.now()+Math.random().toString(36).slice(2)});queueSet(q)}
@@ -199,26 +199,16 @@ function loadAmneziaProfiles(){
  }catch(e){$('amProfileInfo').textContent='Не удалось загрузить профили'}
 }
 function fillSavedLogin(){
- const remember=storeGet('rememberLogin')==='1';
- if($('rememberLogin'))$('rememberLogin').checked=remember;
- if(remember){
-  $('loginUin').value=storeGet('savedLoginUin')||storeGet('uin')||storeGet('lastRegisteredUin')||'';
-  $('loginPass').value=storeGet('savedLoginPass')||'';
- }else if(!$('loginUin').value){
-  $('loginUin').value=storeGet('uin')||storeGet('lastRegisteredUin')||'';
- }
-}
-function saveLoginChoice(uin,password){
- const remember=!!$('rememberLogin')?.checked;
- storeSet('rememberLogin',remember?'1':'0');
- if(remember){storeSet('savedLoginUin',uin);storeSet('savedLoginPass',password)}
- else{storeRemove('savedLoginUin');storeRemove('savedLoginPass')}
+ const u=storeGet('uin')||storeGet('lastRegisteredUin')||'';
+ if(!$('loginUin').value)$('loginUin').value=u;
+ $('loginPass').value='';
+ storeRemove('savedLoginPass');storeRemove('savedLoginUin');storeRemove('rememberLogin');
 }
 function showAuth(){$('authView').classList.remove('hide');$('appView').classList.add('hide');fillSavedLogin()}
 function showApp(){$('authView').classList.add('hide');$('appView').classList.remove('hide');if($('resolvedServer'))$('resolvedServer').textContent=base?'Подключено: '+base:'Сервер не найден'}
 async function checkServer(){const d=await resolveServer();if(d.ok){$('serverCheckState').textContent='✓ Сервер доступен · v'+d.version;return true}$('serverCheckState').textContent='✕ Нет соединения с сервером';return false}
 $('showReg').onclick=()=>{$('loginCard').classList.add('hide');$('regDoneCard').classList.add('hide');$('regCard').classList.remove('hide')};$('showLogin').onclick=()=>{$('regCard').classList.add('hide');$('regDoneCard').classList.add('hide');$('loginCard').classList.remove('hide')};
-$('loginBtn').onclick=async()=>{try{if(!(await checkServer()))return;const uin=$('loginUin').value.replace(/\D/g,''),password=$('loginPass').value;if(uin.length!==8)throw Error('Введите 8-значный UIN');if(!password)throw Error('Введите пароль');$('authState').textContent='Выполняю вход…';let r=await api('/api/login',{method:'POST',body:JSON.stringify({uin,password})});token=r.token;storeSet('token',token);storeSet('uin',r.user.uin);saveLoginChoice(r.user.uin,password);$('authState').textContent='';await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}};
+$('loginBtn').onclick=async()=>{try{if(!(await checkServer()))return;const uin=$('loginUin').value.replace(/\D/g,''),password=$('loginPass').value;if(uin.length!==8)throw Error('Введите 8-значный UIN');if(!password)throw Error('Введите пароль');$('authState').textContent='Выполняю вход…';let r=await api('/api/login',{method:'POST',body:JSON.stringify({uin,password})});token=r.token;storeSet('token',token);storeSet('uin',r.user.uin);storeRemove('savedLoginPass');storeRemove('savedLoginUin');storeRemove('rememberLogin');$('authState').textContent='';await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}};
 $('regBtn').onclick=async()=>{try{
  if(!(await checkServer()))return;
  const nick=$('regNick').value.trim(),p=$('regPhone').value.trim(),pass=$('regPass').value,pass2=$('regPass2').value;
@@ -240,8 +230,8 @@ $('regBtn').onclick=async()=>{try{
 $('copyNewUin').onclick=()=>{const u=$('newUin').textContent;try{NativeBridge.copy(u)}catch(_){navigator.clipboard?.writeText(u)}};
 $('goLogin').onclick=()=>{$('regDoneCard').classList.add('hide');$('loginCard').classList.remove('hide');$('loginUin').value=storeGet('lastRegisteredUin')||$('newUin').textContent;$('authState').textContent='Введите пароль от созданного аккаунта'};
 async function afterAuth(u){
- me=u;cacheSet('me',me);showApp();renderMe();
- Promise.allSettled([loadContacts(),loadGroups(),loadGroupInvites()]).catch(()=>{});
+ me=u;storeSet('uin',u.uin);cacheSet('me',me);showApp();renderMe();
+ await Promise.allSettled([loadContacts(),loadGroups(),loadGroupInvites()]);
  chatMode=storeGet('lastChatMode')||'direct';
  sel=storeGet('lastSel')||'';
  selGroup=storeGet('lastSelGroup')||'';
@@ -380,33 +370,54 @@ if($('ownerClearVip'))$('ownerClearVip').onclick=async()=>{
   await loadContacts();
  }catch(e){$('ownerStatusState').textContent=e.message}
 };
-$('logout').onclick=()=>{token='';storeRemove('token');storeRemove('lastScreen');storeRemove('lastSel');storeRemove('lastSelGroup');storeRemove('lastChatMode');if(storeGet('rememberLogin')!=='1')storeRemove('uin');try{ws?.close()}catch(_){}showAuth()};
+$('logout').onclick=()=>{token='';storeRemove('token');storeRemove('lastScreen');storeRemove('lastSel');storeRemove('lastSelGroup');storeRemove('lastChatMode');storeRemove('savedLoginPass');storeRemove('savedLoginUin');storeRemove('rememberLogin');try{ws?.close()}catch(_){}showAuth()};
 (async()=>{
-  const resolved=await resolveServer();
-  showAuth();
-  $('serverCheckState').textContent=resolved.ok?'✓ Сервер доступен · v'+resolved.version:'✕ Основной сервер пока недоступен';
-  if(!token){
-  fillSavedLogin();
-  const au=storeGet('rememberLogin')==='1'?storeGet('savedLoginUin'):'';
-  const ap=storeGet('rememberLogin')==='1'?storeGet('savedLoginPass'):'';
-  if(au&&ap&&resolved.ok){
-   try{
-    $('authState').textContent='Автоматический вход…';
-    const r=await api('/api/login',{method:'POST',body:JSON.stringify({uin:au,password:ap})});
-    token=r.token;storeSet('token',token);storeSet('uin',r.user.uin);$('authState').textContent='';await afterAuth(r.user);return;
-   }catch(e){$('authState').textContent='Автовход не выполнен: '+e.message}
+  // Restore the last signed-in account immediately from Android-backed cache.
+  const cached=token?cacheGet('me',null):null;
+  if(cached){
+    me=cached;showApp();renderMe();
+    await Promise.allSettled([loadContacts(),loadGroups(),loadGroupInvites()]);
+    chatMode=storeGet('lastChatMode')||'direct';
+    sel=storeGet('lastSel')||'';
+    selGroup=storeGet('lastSelGroup')||'';
+    const last=storeGet('lastScreen')||'contacts';
+    show(last==='chat'&&!(sel||selGroup)?'contacts':last);
+    $('serverState').textContent='подключение…';
+  }else{
+    showAuth();fillSavedLogin();
   }
-  return
-}
+
+  const resolved=await resolveServer();
+  $('serverCheckState').textContent=resolved.ok?'✓ Сервер доступен · v'+resolved.version:'✕ Основной сервер пока недоступен';
+
+  if(!token){
+    showAuth();fillSavedLogin();return;
+  }
+
+  if(!resolved.ok){
+    if(cached){
+      $('serverState').textContent='offline';
+      $('head').innerHTML=esc(me.nick)+' · офлайн-режим'+(me.vip?' <span class="vipBadge">VIP</span>':'');
+      return;
+    }
+    showAuth();fillSavedLogin();$('authState').textContent='Сессия сохранена. Подключись к серверу для первого восстановления данных.';return;
+  }
+
   try{
-    const r=await fetch(base+'/api/me',{headers:{'Authorization':'Bearer '+token}});
-    if(r.status===401){token='';storeRemove('token');storeRemove('uin');showAuth();return}
+    const r=await fetch(base+'/api/me',{headers:{'Authorization':'Bearer '+token},cache:'no-store'});
+    if(r.status===401){
+      token='';storeRemove('token');showAuth();fillSavedLogin();$('authState').textContent='Сессия истекла. Войди ещё раз.';return;
+    }
     if(!r.ok)throw Error('server');
-    const u=await r.json();await afterAuth(u);
+    const u=await r.json();
+    await afterAuth(u);
   }catch(_){
-    const cached=cacheGet('me',null);
-    if(cached){me=cached;showApp();renderMe();await Promise.all([loadContacts(),loadGroups()]);$('serverState').textContent='offline';$('head').textContent=me.nick+' · офлайн-режим'}
-    else{showAuth();$('loginUin').value=storeGet('uin')||'';$('authState').textContent='Сессия сохранена, но локальных данных пока нет. Подключись к серверу один раз.'}
+    if(cached){
+      me=cached;showApp();renderMe();$('serverState').textContent='offline';
+      $('head').innerHTML=esc(me.nick)+' · офлайн-режим'+(me.vip?' <span class="vipBadge">VIP</span>':'');
+    }else{
+      showAuth();fillSavedLogin();$('authState').textContent='Сессия сохранена, но локальных данных пока нет.';
+    }
   }
 })();
 </script></body></html>
