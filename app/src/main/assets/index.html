@@ -6,7 +6,7 @@
 </style></head><body>
 <div id="authView" class="wrap auth">
 <div style="font-size:56px;text-align:center">🌼</div><h2>ICQ <span style="color:var(--green)">Reborn</span></h2>
-<div class="card"><div class="sectionTitle">Подключение</div><div class="notice">ICQ Reborn автоматически подключается к основному серверу.</div><div id="serverCheckState" class="state" style="margin-top:8px">Проверяю сервер…</div></div>
+<div class="card"><div class="sectionTitle">Подключение</div><div class="notice">ICQ Reborn автоматически подключается к основному серверу через интернет.</div><div id="serverCheckState" class="state" style="margin-top:8px">Проверяю сервер…</div></div>
 <div id="loginCard" class="card"><div class="sectionTitle">Вход</div><input id="loginUin" class="f" style="width:100%" placeholder="UIN"><input id="loginPass" class="f" type="password" style="width:100%;margin-top:8px" placeholder="Пароль"><div class="row" style="margin-top:8px"><button id="loginBtn" class="primary grow">Войти</button><button id="showReg" class="grow">Регистрация</button></div><div id="authState" class="state"></div></div>
 <div id="regCard" class="card hide"><div class="sectionTitle">Регистрация нового аккаунта</div><input id="regNick" class="f" style="width:100%" placeholder="Ник"><input id="regPhone" class="f" inputmode="tel" style="width:100%;margin-top:8px" placeholder="Номер телефона"><input id="regPass" class="f" type="password" style="width:100%;margin-top:8px" placeholder="Пароль, минимум 6 символов"><input id="regPass2" class="f" type="password" style="width:100%;margin-top:8px" placeholder="Повторите пароль"><div class="notice" style="margin-top:10px">После регистрации сервер создаст постоянный UIN. Для входа на другом устройстве понадобятся UIN и пароль.</div><div class="row" style="margin-top:8px"><button id="regBtn" class="primary grow">Создать аккаунт</button><button id="showLogin">Назад ко входу</button></div><div id="regState" class="state"></div></div>
 <div id="regDoneCard" class="card hide"><div class="sectionTitle">Аккаунт создан</div><div style="text-align:center;padding:8px 0"><div class="sub">Ваш UIN</div><div id="newUin" style="font-size:34px;font-weight:900;letter-spacing:.08em;color:var(--green)">00000000</div><div class="notice" style="margin-top:10px">Сохрани этот UIN. По нему можно войти в аккаунт на другом устройстве.</div></div><div class="row"><button id="copyNewUin" class="grow">Копировать UIN</button><button id="goLogin" class="primary grow">Войти по UIN</button></div></div>
@@ -25,7 +25,7 @@
 <section id="settings" class="screen">
 <div class="card"><div class="sectionTitle">Профиль</div><div class="settingsAvatar"><div id="settingsAvatar" class="profileAvatar">?</div><div class="grow"><label class="primary" style="display:inline-block;padding:10px 12px;border-radius:14px;cursor:pointer">Галерея<input id="avatarFile" type="file" accept="image/*" hidden></label><label class="softBtn" style="display:inline-block;padding:10px 12px;border-radius:14px;cursor:pointer;margin-left:6px">Камера<input id="avatarCamera" type="file" accept="image/*" capture="user" hidden></label><button id="removeAvatar" class="softBtn" style="margin-left:6px">Удалить</button><div id="avatarState" class="state">PNG, JPG или WEBP · исходное изображение до 100 МБ</div></div></div><input id="nick" class="f" style="width:100%;margin-top:12px" placeholder="Ник"><button id="save" class="primary" style="width:100%;margin-top:8px">Сохранить профиль</button></div>
 <div class="card"><div class="sectionTitle">Телефон</div><div id="phoneSummary" class="phoneLinked"></div><input id="myPhone" class="f" inputmode="tel" style="width:100%;margin-top:8px" placeholder="Новый номер телефона"><div class="row" style="margin-top:8px"><button id="savePhone" class="primary grow">Привязать / заменить</button><button id="unlinkPhone">Отвязать</button></div></div>
-<div class="card"><div class="sectionTitle">Сеть</div><div class="notice">Адрес сервера определяется автоматически. Пользователю не нужно вводить IP или порт.</div><div id="resolvedServer" class="state" style="margin-top:8px"></div></div>
+<div class="card"><div class="sectionTitle">Сеть</div><div class="notice">Подключение настраивается автоматически и работает через Wi‑Fi или мобильную сеть. Пользователю не нужно вводить IP или порт.</div><div id="resolvedServer" class="state" style="margin-top:8px"></div></div>
 <div class="card"><button id="logout" class="danger" style="width:100%">Выйти из аккаунта</button></div>
 </section></div>
 <div class="tabs"><button class="on" data-s="contacts">Контакты</button><button data-s="groups">Группы</button><button data-s="chat">Чат</button><button data-s="calls">Звонки</button><button data-s="settings">⚙</button></div>
@@ -52,6 +52,7 @@ async function flushQueue(){let q=queueGet(),left=[];for(const a of q){try{
  else if(a.type==='avatar')me=await api('/api/me/avatar',{method:'POST',body:JSON.stringify({data:a.data})});
  }catch(_){left.push(a)}}queueSet(left);if(!left.length){try{await loadContacts();await loadGroups()}catch(_){}}}
 const BOOTSTRAP_URL='https://raw.githubusercontent.com/Moretti27/ICQ-REBORN/main/server-config.json';
+const PUBLIC_FALLBACK='http://31.135.108.120:22005';
 const LOCAL_FALLBACK='http://192.168.3.3:22005';
 let base=(storeGet('resolvedServer')||'').replace(/\/$/,'');
 async function resolveServer(){
@@ -65,6 +66,7 @@ async function resolveServer(){
   }
  }catch(_){}
  if(base)candidates.push(base);
+ candidates.push(PUBLIC_FALLBACK);
  candidates.push(LOCAL_FALLBACK);
  for(const u of [...new Set(candidates)]){
   if(!/^https?:\/\//i.test(u))continue;
