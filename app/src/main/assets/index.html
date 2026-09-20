@@ -11,7 +11,7 @@
 #calls .callName{font-size:18px;margin-top:8px;line-height:1.15}
 #calls .callStatus{font-size:11px;margin-top:3px;min-height:15px}
 #calls .callControls{margin-top:10px;gap:7px;flex-wrap:nowrap}
-#calls .callRound{width:42px;height:42px;min-width:42px;font-size:17px;border-radius:14px}
+#calls .callRound{width:42px;height:42px;min-width:42px;font-size:13px;border-radius:14px;padding:0 9px}#calls #callV,#calls #cam{width:auto;min-width:64px}#local{-webkit-transform:none!important;transform:none!important}
 #calls .videos{display:none!important;width:100%;margin-top:10px!important;grid-template-columns:1fr;gap:7px}
 #calls .callHero.videoActive .videos{display:grid!important}
 #calls .videos video{min-height:0;height:auto;max-height:260px;aspect-ratio:16/10;object-fit:cover;border-radius:14px;border:1px solid #203b27;background:#020503}
@@ -31,7 +31,7 @@
 <div id="authView" class="wrap auth">
 <div style="font-size:56px;text-align:center">🌼</div><h2>ICQ <span style="color:var(--green)">Reborn</span></h2>
 <div class="card"><div class="sectionTitle">Подключение</div><div class="notice">ICQ Reborn автоматически подключается к основному серверу через интернет.</div><div id="serverCheckState" class="state" style="margin-top:8px">Проверяю сервер…</div></div>
-<div id="loginCard" class="card"><div class="sectionTitle">Вход</div><input id="loginUin" class="f" style="width:100%" placeholder="UIN"><input id="loginPass" class="f" type="password" style="width:100%;margin-top:8px" placeholder="Пароль"><div class="row" style="margin-top:8px"><button id="loginBtn" class="primary grow">Войти</button><button id="showReg" class="grow">Регистрация</button></div><div id="authState" class="state"></div></div>
+<div id="loginCard" class="card"><div class="sectionTitle">Вход</div><input id="loginUin" class="f" style="width:100%" placeholder="UIN"><input id="loginPass" class="f" type="password" style="width:100%;margin-top:8px" placeholder="Пароль"><label class="row" style="margin-top:9px;gap:7px"><input id="rememberLogin" type="checkbox"><span class="sub">Сохранить UIN и пароль · входить автоматически</span></label><div class="row" style="margin-top:8px"><button id="loginBtn" class="primary grow">Войти</button><button id="showReg" class="grow">Регистрация</button></div><div id="authState" class="state"></div></div>
 <div id="regCard" class="card hide"><div class="sectionTitle">Регистрация нового аккаунта</div><input id="regNick" class="f" style="width:100%" placeholder="Ник"><input id="regPhone" class="f" inputmode="tel" style="width:100%;margin-top:8px" placeholder="Номер телефона"><input id="regPass" class="f" type="password" style="width:100%;margin-top:8px" placeholder="Пароль, минимум 6 символов"><input id="regPass2" class="f" type="password" style="width:100%;margin-top:8px" placeholder="Повторите пароль"><div class="notice" style="margin-top:10px">После регистрации сервер создаст постоянный UIN. Для входа на другом устройстве понадобятся UIN и пароль.</div><div class="row" style="margin-top:8px"><button id="regBtn" class="primary grow">Создать аккаунт</button><button id="showLogin">Назад ко входу</button></div><div id="regState" class="state"></div></div>
 <div id="regDoneCard" class="card hide"><div class="sectionTitle">Аккаунт создан</div><div style="text-align:center;padding:8px 0"><div class="sub">Ваш UIN</div><div id="newUin" style="font-size:34px;font-weight:900;letter-spacing:.08em;color:var(--green)">00000000</div><div class="notice" style="margin-top:10px">Сохрани этот UIN. По нему можно войти в аккаунт на другом устройстве.</div></div><div class="row"><button id="copyNewUin" class="grow">Копировать UIN</button><button id="goLogin" class="primary grow">Войти по UIN</button></div></div>
 </div>
@@ -44,8 +44,8 @@
 <div class="sectionTitle">Контакты</div><div class="card" id="list"></div>
 </section>
 <section id="groups" class="screen"><div class="card"><div class="sectionTitle">Новая группа</div><input id="groupName" class="f" style="width:100%" placeholder="Название группы"><div class="notice" style="margin-top:8px">Выбранным контактам придут приглашения. В группу они попадут только после принятия.</div><div id="memberChips" class="groupchips" style="margin:9px 0"></div><button id="createGroup" class="primary" style="width:100%">Создать и отправить приглашения</button></div><div class="sectionTitle">Приглашения мне</div><div class="card" id="groupInviteList"></div><div class="sectionTitle">Мои группы</div><div class="card" id="groupList"></div></section>
-<section id="chat" class="screen"><div class="card"><div class="chatHead"><div id="chatAvatar" class="avatar">?</div><div class="grow"><h3 id="chatTitle" style="margin:0">Чат</h3><div id="chatSubtitle" class="sub"></div></div><div id="chatQuickActions" class="contactActions"><button id="chatCallBtn" class="miniBtn" title="Позвонить">📞</button><button id="chatVideoBtn" class="miniBtn" title="Видеозвонок">🎥</button></div><span id="peer" class="pill">сервер</span></div><div id="messages" class="chat" style="margin-top:10px"></div><div class="composer"><label class="f">📎<input id="file" type="file" hidden></label><input id="msg" class="f" placeholder="Сообщение"><button id="send" class="primary">➤</button></div><div id="sendState" class="state"></div></div></section>
-<section id="calls" class="screen"><div id="incoming" class="card incomingCard hide"><div id="incomingAvatar" class="callAvatar" style="margin:auto">?</div><div id="incomingText" class="callName">Входящий звонок</div><div class="callStatus">ICQ Reborn</div><div class="callControls"><button id="take" class="primary callRound">✓</button><button id="reject" class="danger callRound">✕</button></div></div><div class="callHero"><div id="callAvatar" class="callAvatar">?</div><div id="callName" class="callName">Звонки</div><div id="callState" class="callStatus">Выбери контакт и начни звонок</div><div class="callControls"><button id="callA" class="primary callRound" title="Аудио">📞</button><button id="callV" class="primary callRound" title="Видео">🎥</button><button id="mute" class="softBtn callRound" title="Микрофон">🎙️</button><button id="cam" class="softBtn callRound" title="Камера">📷</button><button id="hang" class="callRound end" title="Завершить">✕</button></div><div class="videos" style="width:100%;margin-top:18px"><video id="remote" autoplay playsinline></video><video id="local" autoplay muted playsinline></video></div></div></section>
+<section id="chat" class="screen"><div class="card"><div class="chatHead"><div id="chatAvatar" class="avatar">?</div><div class="grow"><h3 id="chatTitle" style="margin:0">Чат</h3><div id="chatSubtitle" class="sub"></div></div><div id="chatQuickActions" class="contactActions"><button id="chatCallBtn" class="miniBtn" title="Позвонить">Звонок</button><button id="chatVideoBtn" class="miniBtn" title="Видеозвонок">Видео</button></div><span id="peer" class="pill">сервер</span></div><div id="messages" class="chat" style="margin-top:10px"></div><div class="composer"><label class="f">📎<input id="file" type="file" hidden></label><input id="msg" class="f" placeholder="Сообщение"><button id="send" class="primary">➤</button></div><div id="sendState" class="state"></div></div></section>
+<section id="calls" class="screen"><div id="incoming" class="card incomingCard hide"><div id="incomingAvatar" class="callAvatar" style="margin:auto">?</div><div id="incomingText" class="callName">Входящий звонок</div><div class="callStatus">ICQ Reborn</div><div class="callControls"><button id="take" class="primary callRound">✓</button><button id="reject" class="danger callRound">✕</button></div></div><div class="callHero"><div id="callAvatar" class="callAvatar">?</div><div id="callName" class="callName">Звонки</div><div id="callState" class="callStatus">Выбери контакт и начни звонок</div><div class="callControls"><button id="callA" class="primary callRound" title="Аудиозвонок">☎</button><button id="callV" class="primary callRound" title="Видеозвонок">Видео</button><button id="mute" class="softBtn callRound" title="Микрофон">Мик</button><button id="cam" class="softBtn callRound hide" title="Камера">Камера</button><button id="hang" class="callRound end" title="Завершить">×</button></div><div class="videos" style="width:100%;margin-top:18px"><video id="remote" autoplay playsinline></video><video id="local" autoplay muted playsinline></video></div></div></section>
 <section id="settings" class="screen">
 <div class="card"><div class="sectionTitle">Профиль</div><div class="settingsAvatar"><div id="settingsAvatar" class="profileAvatar">?</div><div class="grow"><label class="primary" style="display:inline-block;padding:10px 12px;border-radius:14px;cursor:pointer">Галерея<input id="avatarFile" type="file" accept="image/*" hidden></label><label class="softBtn" style="display:inline-block;padding:10px 12px;border-radius:14px;cursor:pointer;margin-left:6px">Камера<input id="avatarCamera" type="file" accept="image/*" capture="user" hidden></label><button id="removeAvatar" class="softBtn" style="margin-left:6px">Удалить</button><div id="avatarState" class="state">PNG, JPG или WEBP · исходное изображение до 100 МБ</div></div></div><input id="nick" class="f" style="width:100%;margin-top:12px" placeholder="Ник"><button id="save" class="primary" style="width:100%;margin-top:8px">Сохранить профиль</button></div>
 <div class="card"><div class="sectionTitle">Телефон</div><div id="phoneSummary" class="phoneLinked"></div><input id="myPhone" class="f" inputmode="tel" style="width:100%;margin-top:8px" placeholder="Новый номер телефона"><div class="row" style="margin-top:8px"><button id="savePhone" class="primary grow">Привязать / заменить</button><button id="unlinkPhone">Отвязать</button></div></div>
@@ -195,11 +195,27 @@ function loadAmneziaProfiles(){
   if(list.length)renderAmneziaProfile();else $('amProfileInfo').textContent='Встроенные профили не найдены';
  }catch(e){$('amProfileInfo').textContent='Не удалось загрузить профили'}
 }
-function showAuth(){$('authView').classList.remove('hide');$('appView').classList.add('hide')}
+function fillSavedLogin(){
+ const remember=storeGet('rememberLogin')==='1';
+ if($('rememberLogin'))$('rememberLogin').checked=remember;
+ if(remember){
+  $('loginUin').value=storeGet('savedLoginUin')||storeGet('uin')||storeGet('lastRegisteredUin')||'';
+  $('loginPass').value=storeGet('savedLoginPass')||'';
+ }else if(!$('loginUin').value){
+  $('loginUin').value=storeGet('uin')||storeGet('lastRegisteredUin')||'';
+ }
+}
+function saveLoginChoice(uin,password){
+ const remember=!!$('rememberLogin')?.checked;
+ storeSet('rememberLogin',remember?'1':'0');
+ if(remember){storeSet('savedLoginUin',uin);storeSet('savedLoginPass',password)}
+ else{storeRemove('savedLoginUin');storeRemove('savedLoginPass')}
+}
+function showAuth(){$('authView').classList.remove('hide');$('appView').classList.add('hide');fillSavedLogin()}
 function showApp(){$('authView').classList.add('hide');$('appView').classList.remove('hide');if($('resolvedServer'))$('resolvedServer').textContent=base?'Подключено: '+base:'Сервер не найден'}
 async function checkServer(){const d=await resolveServer();if(d.ok){$('serverCheckState').textContent='✓ Сервер доступен · v'+d.version;return true}$('serverCheckState').textContent='✕ Нет соединения с сервером';return false}
 $('showReg').onclick=()=>{$('loginCard').classList.add('hide');$('regDoneCard').classList.add('hide');$('regCard').classList.remove('hide')};$('showLogin').onclick=()=>{$('regCard').classList.add('hide');$('regDoneCard').classList.add('hide');$('loginCard').classList.remove('hide')};
-$('loginBtn').onclick=async()=>{try{if(!(await checkServer()))return;const uin=$('loginUin').value.replace(/\D/g,''),password=$('loginPass').value;if(uin.length!==8)throw Error('Введите 8-значный UIN');if(!password)throw Error('Введите пароль');$('authState').textContent='Выполняю вход…';let r=await api('/api/login',{method:'POST',body:JSON.stringify({uin,password})});token=r.token;storeSet('token',token);storeSet('uin',r.user.uin);$('authState').textContent='';await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}};
+$('loginBtn').onclick=async()=>{try{if(!(await checkServer()))return;const uin=$('loginUin').value.replace(/\D/g,''),password=$('loginPass').value;if(uin.length!==8)throw Error('Введите 8-значный UIN');if(!password)throw Error('Введите пароль');$('authState').textContent='Выполняю вход…';let r=await api('/api/login',{method:'POST',body:JSON.stringify({uin,password})});token=r.token;storeSet('token',token);storeSet('uin',r.user.uin);saveLoginChoice(r.user.uin,password);$('authState').textContent='';await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}};
 $('regBtn').onclick=async()=>{try{
  if(!(await checkServer()))return;
  const nick=$('regNick').value.trim(),p=$('regPhone').value.trim(),pass=$('regPass').value,pass2=$('regPass2').value;
@@ -270,14 +286,14 @@ async function getMedia(mode){
  ls=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:mode==='video'?{facingMode:{ideal:'user'},width:{ideal:640},height:{ideal:480},frameRate:{ideal:24,max:30}}:false});
  const lv=$('local');lv.srcObject=ls;lv.muted=true;lv.setAttribute('playsinline','');lv.play().catch(()=>{});
  for(const tr of ls.getTracks()){if(tr.kind==='video'){try{tr.contentHint='motion'}catch(_){}}pc.addTrack(tr,ls)}
- if(mode==='audio')lv.srcObject=null;
+ if(mode==='audio'){lv.srcObject=null;$('cam')?.classList.add('hide')}else{$('cam')?.classList.remove('hide');$('cam').textContent='Камера'};
 }
 async function flushIce(){for(const c of pendingIce)try{await pc.addIceCandidate(c)}catch(_){}pendingIce=[]}
 function renderCallPeer(u){$('callName').textContent=u?.nick||'Звонок';setAvatarEl($('callAvatar'),u);setAvatarEl($('incomingAvatar'),u)}
 async function startCall(mode){if(chatMode!=='direct'||!sel)return toast('Для звонка открой личный чат');try{const peer=contacts.find(x=>x.uin===sel);renderCallPeer(peer);await newPc(sel);await getMedia(mode);if(mode==='audio'&&!pc.getTransceivers().some(t=>t.receiver?.track?.kind==='audio'))pc.addTransceiver('audio',{direction:'sendrecv'});let off=await pc.createOffer();await pc.setLocalDescription(off);wsSend({type:'call-signal',to:sel,signalType:'offer',payload:{sdp:pc.localDescription,mode}});$('callState').textContent=mode==='video'?'Видеовызов…':'Аудиовызов…';show('calls')}catch(e){$('callState').textContent='Ошибка: '+e.message;toast(e.message)}}
 async function handleSignal(m){try{if(m.signalType==='offer'){pendingCall=m;renderCallPeer(m.fromUser);$('incomingText').textContent=(m.fromUser?.nick||m.from);$('incoming').classList.remove('hide');try{NativeBridge.notify('ICQ Reborn',$('incomingText').textContent,'call')}catch(_){}show('calls');return}if(m.signalType==='ice'){if(!pc||!pc.remoteDescription)pendingIce.push(m.payload);else await pc.addIceCandidate(m.payload);return}if(m.signalType==='answer'){await pc.setRemoteDescription(m.payload);await flushIce();$('callState').textContent='Звонок идёт';return}if(m.signalType==='hang'){stopCall();return}}catch(e){$('callState').textContent='Ошибка звонка: '+e.message}}
 $('take').onclick=async()=>{try{let m=pendingCall,savedIce=[...pendingIce];$('incoming').classList.add('hide');await newPc(m.from,true);pendingIce=savedIce;await pc.setRemoteDescription(m.payload.sdp);await getMedia(m.payload.mode);await flushIce();let ans=await pc.createAnswer();await pc.setLocalDescription(ans);wsSend({type:'call-signal',to:m.from,signalType:'answer',payload:pc.localDescription});pendingCall=null;$('callState').textContent='Звонок идёт'}catch(e){$('callState').textContent='Не удалось принять: '+e.message}};
-$('reject').onclick=()=>{if(pendingCall)wsSend({type:'call-signal',to:pendingCall.from,signalType:'hang',payload:{}});$('incoming').classList.add('hide');pendingCall=null};function stopCall(){ls?.getTracks().forEach(t=>t.stop());rs?.getTracks().forEach(t=>t.stop());ls=rs=null;document.querySelector('#calls .callHero')?.classList.remove('videoActive');$('local').srcObject=$('remote').srcObject=null;try{pc?.close()}catch(_){}pc=null;pendingIce=[];callPeer='';$('calls')?.classList.remove('keepMedia');$('callState').textContent='Нет звонка'}$('hang').onclick=()=>{if(callPeer)try{wsSend({type:'call-signal',to:callPeer,signalType:'hang',payload:{}})}catch(_){}stopCall()};$('callA').onclick=()=>startCall('audio');$('callV').onclick=()=>startCall('video');$('chatCallBtn').onclick=()=>startCall('audio');$('chatVideoBtn').onclick=()=>startCall('video');$('mute').onclick=()=>{let t=ls?.getAudioTracks()[0];if(t){t.enabled=!t.enabled;$('mute').textContent=t.enabled?'🎙️':'🔇'}};$('cam').onclick=()=>{let t=ls?.getVideoTracks()[0];if(t){t.enabled=!t.enabled;$('cam').textContent=t.enabled?'📷':'🚫'}};
+$('reject').onclick=()=>{if(pendingCall)wsSend({type:'call-signal',to:pendingCall.from,signalType:'hang',payload:{}});$('incoming').classList.add('hide');pendingCall=null};function stopCall(){ls?.getTracks().forEach(t=>t.stop());rs?.getTracks().forEach(t=>t.stop());ls=rs=null;document.querySelector('#calls .callHero')?.classList.remove('videoActive');$('cam')?.classList.add('hide');$('cam').textContent='Камера';$('local').srcObject=$('remote').srcObject=null;try{pc?.close()}catch(_){}pc=null;pendingIce=[];callPeer='';$('calls')?.classList.remove('keepMedia');$('callState').textContent='Нет звонка'}$('hang').onclick=()=>{if(callPeer)try{wsSend({type:'call-signal',to:callPeer,signalType:'hang',payload:{}})}catch(_){}stopCall()};$('callA').onclick=()=>startCall('audio');$('callV').onclick=()=>startCall('video');$('chatCallBtn').onclick=()=>startCall('audio');$('chatVideoBtn').onclick=()=>startCall('video');$('mute').onclick=()=>{let t=ls?.getAudioTracks()[0];if(t){t.enabled=!t.enabled;$('mute').textContent=t.enabled?'🎙️':'🔇'}};$('cam').onclick=()=>{let t=ls?.getVideoTracks()[0];if(t){t.enabled=!t.enabled;$('cam').textContent=t.enabled?'Камера':'Камера выкл.'}};
 
 async function loadSupportStatus(){
  if(!token||!$('vipState'))return;
@@ -297,12 +313,24 @@ $('supportBtn').onclick=async()=>{
   toast('Открыта страница поддержки. VIP включится после подтверждения перевода.');
  }catch(e){toast(e.message)}
 };
-$('logout').onclick=()=>{token='';storeRemove('token');storeRemove('uin');try{ws?.close()}catch(_){}showAuth()};
+$('logout').onclick=()=>{token='';storeRemove('token');if(storeGet('rememberLogin')!=='1')storeRemove('uin');try{ws?.close()}catch(_){}showAuth()};
 (async()=>{
   const resolved=await resolveServer();
   showAuth();
   $('serverCheckState').textContent=resolved.ok?'✓ Сервер доступен · v'+resolved.version:'✕ Основной сервер пока недоступен';
-  if(!token){$('loginUin').value=storeGet('uin')||storeGet('lastRegisteredUin')||'';return}
+  if(!token){
+  fillSavedLogin();
+  const au=storeGet('rememberLogin')==='1'?storeGet('savedLoginUin'):'';
+  const ap=storeGet('rememberLogin')==='1'?storeGet('savedLoginPass'):'';
+  if(au&&ap&&resolved.ok){
+   try{
+    $('authState').textContent='Автоматический вход…';
+    const r=await api('/api/login',{method:'POST',body:JSON.stringify({uin:au,password:ap})});
+    token=r.token;storeSet('token',token);storeSet('uin',r.user.uin);$('authState').textContent='';await afterAuth(r.user);return;
+   }catch(e){$('authState').textContent='Автовход не выполнен: '+e.message}
+  }
+  return
+}
   try{
     const r=await fetch(base+'/api/me',{headers:{'Authorization':'Bearer '+token}});
     if(r.status===401){token='';storeRemove('token');storeRemove('uin');showAuth();return}
