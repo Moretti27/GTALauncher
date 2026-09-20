@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.28.0-alpha
+
+- Removed Cloudflare Tunnel from the normal deployment path.
+- Configured direct public endpoint `http://31.135.108.120:22005`.
+- Kept central `server-config.json` discovery so the public IP can be changed without rebuilding installed APKs.
+- Added direct public fallback to foreground and background Android connections.
+- Added `SETUP_NETWORK.bat` to create the Windows Firewall rule for TCP 22005.
+- Added `CHECK_CONNECTION.bat` for local/public health diagnostics.
+- Updated PC Host startup output with LAN/public endpoints and port-forward reminder.
+- Android users still do not enter a server IP or port.
+- Note: the current direct-IP deployment is HTTP/WS and does not encrypt traffic in transit.
+
 ## v0.27.0-alpha
 
 - Added automatic public server discovery through server-config.json.
