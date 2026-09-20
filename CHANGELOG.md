@@ -1,0 +1,52 @@
+# Changelog
+
+## v0.22.0-alpha
+
+- Improved audio and video WebRTC call handling.
+- Removed the previously unverified external TURN fallback.
+- Fixed incoming-call ICE candidate preservation.
+- Improved remote audio playback.
+- Suppressed duplicate Android tray notifications while the app is open.
+- Kept in-app message sounds while foregrounded.
+- Unified Android and server version labels to v0.22.
+- Updated Windows server launcher and server documentation.
+
+## v0.21.0-alpha
+
+- Added persistent Android session storage through SharedPreferences.
+- Saved UIN and login token outside WebView localStorage.
+- Server now stores a persistent JWT signing secret.
+- Temporary server outages no longer automatically erase the local login session.
+- Extended server session lifetime.
+
+## v0.20.0-alpha
+
+- Added groups and group chat.
+- Added arbitrary file transfer up to 100 MB.
+- Reworked presence statuses.
+- Moved phone number management to Settings.
+- Redesigned the main interface.
+- Reworked audio/video call signaling.
+
+## v0.19.0-alpha
+
+- Added user-provided custom sound for new contacts.
+- Added user-provided custom message notification sound.
+
+## v0.18.0-alpha
+
+- Added phone-contact synchronization.
+- Added retro-style application sounds and Android notifications.
+
+## v0.17.0-alpha
+
+- Fixed local HTTP access from Android WebView.
+- Fixed registration/server connection on port 22005.
+
+## v0.16.0-alpha
+
+- Switched both Android client and PC server to TCP port 22005.
+
+## v0.14.0-alpha
+
+- Switched messaging architecture from unreliable peer-only messaging to a PC-hosted server.
