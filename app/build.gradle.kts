@@ -10,7 +10,7 @@ android {
             keyPassword = "icqreborn-test"
         }
     }
-    defaultConfig { applicationId = "com.icq.reborn"; minSdk = 26; targetSdk = 36; versionCode = 32; versionName = "0.32.0-alpha" }
+    defaultConfig { applicationId = "com.icq.reborn"; minSdk = 26; targetSdk = 36; versionCode = 33; versionName = "0.33.0-alpha" }
     buildTypes {
         getByName("debug") { signingConfig = signingConfigs.getByName("stableDebug") }
         release { isMinifyEnabled = false; signingConfig = signingConfigs.getByName("stableDebug") }
