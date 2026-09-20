@@ -22,14 +22,15 @@ function uid(){return Date.now().toString(36)+crypto.randomBytes(5).toString('he
 function makeUin(){for(let i=0;i<1000;i++){const u=String(Math.floor(10000000+Math.random()*90000000));if(!db.users.some(x=>x.uin===u))return u}throw Error('UIN generation failed')}
 const online=new Map();
 function visibleStatus(u,viewer){
-  if(!online.has(u.uin))return 'OFFLINE';
   const s=u.status||'ONLINE';
-  if(s==='INVISIBLE'&&viewer!==u.uin)return 'OFFLINE';
+  if(viewer===u.uin)return s;
+  if(!online.has(u.uin))return 'OFFLINE';
+  if(s==='INVISIBLE')return 'OFFLINE';
   return s;
 }
 function publicUser(u,viewer){return {uin:u.uin,nick:u.nick,status:visibleStatus(u,viewer),phoneLinked:Array.isArray(u.phoneHashes)&&u.phoneHashes.length>0}}
 function sign(u){return jwt.sign({uin:u.uin},JWT_SECRET,{expiresIn:'30d'})}
-function auth(req,res,next){try{const h=req.headers.authorization||'',t=h.startsWith('Bearer ')?h.slice(7):'',p=jwt.verify(t,JWT_SECRET),u=db.users.find(x=>x.uin===p.uin);if(!u)return res.status(401).json({error:'Пользователь не найден'});req.user=u;next()}catch(_){res.status(401).json({error:'Нужен вход'})}}
+function auth(req,res,next){try{const h=req.headers.authorization||'',t=h.startsWith('Bearer ')?h.slice(7):String(req.query.token||''),p=jwt.verify(t,JWT_SECRET),u=db.users.find(x=>x.uin===p.uin);if(!u)return res.status(401).json({error:'Пользователь не найден'});req.user=u;next()}catch(_){res.status(401).json({error:'Нужен вход'})}}
 function emitTo(uin,obj){const ws=online.get(uin);if(ws&&ws.readyState===1)ws.send(JSON.stringify(obj))}
 function broadcastPresence(uin){const u=db.users.find(x=>x.uin===uin);if(!u)return;for(const [viewer,ws] of online){if(ws.readyState===1)ws.send(JSON.stringify({type:'presence',user:publicUser(u,viewer)}))}}
 function groupFor(id,user){return db.groups.find(g=>g.id===id&&g.members.includes(user.uin))}
