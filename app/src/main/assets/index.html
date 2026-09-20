@@ -3,14 +3,16 @@
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#e7ebe3,#dbe2d8);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh}button,input,textarea,select{font:inherit}.hide{display:none!important}
 .top{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,#07110b,#0a140d);padding:14px 16px;display:flex;gap:12px;align-items:center;box-shadow:0 7px 24px #0004}.logo{font-size:30px}.top b{font-size:19px}.accent{color:var(--green)}.sub{font-size:12px;color:#b8cbb9}.wrap{padding:14px 12px 92px;max-width:760px;margin:auto}.screen{display:none}.screen.on{display:block}
 .card{background:linear-gradient(180deg,rgba(5,20,12,.96),rgba(8,29,16,.97));border:1px solid var(--line);border-radius:24px;padding:16px;margin-bottom:14px;box-shadow:0 13px 34px #0003}.card h3{margin:0 0 12px}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.grow{flex:1}.f,button,textarea,select{border:1px solid rgba(170,255,158,.18);border-radius:16px;padding:12px;background:rgba(10,28,17,.80);color:#effff0}.f:focus,textarea:focus,select:focus{outline:none;border-color:#7cff68}.primary{background:linear-gradient(180deg,var(--green2),var(--green));color:#08240a;font-weight:800}.danger{background:#5b2020;color:#ffdada}.pill{background:rgba(36,91,34,.72);border-radius:999px;padding:7px 11px;font-size:12px}.state{font-size:12px;color:#b7cbb8;margin-top:8px}.notice{font-size:12px;background:rgba(255,255,255,.06);padding:11px;border-radius:15px;color:#c8d8c9}.contact{display:flex;gap:10px;align-items:center;padding:11px 2px;border-bottom:1px solid rgba(255,255,255,.07)}.avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#14351d;font-weight:900}.chat{height:48vh;overflow:auto;background:rgba(0,0,0,.15);border-radius:18px;padding:10px}.b{max-width:82%;background:rgba(255,255,255,.07);border-radius:17px;padding:9px 11px;margin:7px 0}.b.me{margin-left:auto;background:#19451d}.time{font-size:10px;color:#acc0ac;margin-left:8px}.composer{display:flex;gap:8px;margin-top:9px}.composer input{flex:1}.videos{display:grid;grid-template-columns:1fr 1fr;gap:8px}.videos video{width:100%;background:#020703;border-radius:17px;min-height:155px}.tabs{display:flex;position:fixed;bottom:0;left:0;right:0;background:#07100a;padding:7px 6px 10px;z-index:6}.tabs button{flex:1;background:none;color:#aebcad;border:0;padding:8px 4px;border-radius:16px}.tabs .on{color:#aaff72;background:rgba(92,255,84,.08)}
-.auth{max-width:520px;margin:36px auto}.auth .logoBig{font-size:46px;text-align:center}.auth h2{text-align:center;margin-top:8px}
+.auth{max-width:520px;margin:18px auto}.auth .logoBig{font-size:54px;text-align:center}.auth h2{text-align:center;margin:8px 0 18px}.auth .card{margin-bottom:12px}.auth .f,.auth button{min-height:48px}.server-ok{color:#8cff76}.server-bad{color:#ff8989}
 @media(max-width:560px){.wrap{padding:12px 10px 88px}.card{border-radius:21px}.videos{grid-template-columns:1fr}}
 </style></head><body>
 <div id="authView" class="wrap auth">
   <div class="logoBig">🌼</div><h2>ICQ <span class="accent">Reborn</span></h2>
   <div class="card">
-    <h3>Сервер</h3><input id="authServer" class="f" style="width:100%" placeholder="http://192.168.1.50:8080">
-    <div class="notice" style="margin-top:8px">Впиши IPv4 компьютера, на котором запущен ICQ Reborn Server.</div>
+    <h3>Сервер</h3><input id="authServer" class="f" style="width:100%" placeholder="http://192.168.3.3:8080">
+    <div class="row" style="margin-top:8px"><button id="checkServer" class="primary grow">Проверить сервер</button><button id="useHomeServer" class="grow">192.168.3.3</button></div>
+    <div id="serverCheckState" class="state">Адрес по умолчанию: http://192.168.3.3:8080</div>
+    <div class="notice" style="margin-top:8px">Телефон и ПК должны быть в одной сети Wi‑Fi для локального теста.</div>
   </div>
   <div class="card" id="loginCard">
     <h3>Вход</h3><input id="loginUin" class="f" style="width:100%" placeholder="UIN"><input id="loginPass" class="f" style="width:100%;margin-top:8px" type="password" placeholder="Пароль">
@@ -40,7 +42,7 @@
 <script>
 'use strict';
 const $=x=>document.getElementById(x);
-let base=(localStorage.getItem('serverUrl')||'').replace(/\/$/,'');
+let base=(localStorage.getItem('serverUrl')||'http://192.168.3.3:8080').replace(/\/$/,'');
 let token=localStorage.getItem('token')||'';
 let me=null,contacts=[],sel='',ws=null,pc=null,ls=null,rs=null,pendingCall=null;
 
@@ -58,7 +60,7 @@ function wsUrl(){
   return (u.protocol==='https:'?'wss:':'ws:')+'//'+u.host+'/ws?token='+encodeURIComponent(token);
 }
 function showAuth(){
-  $('authView').classList.remove('hide');$('appView').classList.add('hide');$('authServer').value=base;$('serverUrl').value=base;
+  $('authView').classList.remove('hide');$('appView').classList.add('hide');$('authServer').value=base;$('serverUrl').value=base;setTimeout(()=>checkServer(),600);
 }
 function showApp(){
   $('authView').classList.add('hide');$('appView').classList.remove('hide');$('serverUrl').value=base;
@@ -119,11 +121,29 @@ function connectWs(){
 }
 function wsSend(o){if(ws?.readyState!==1)throw Error('Нет соединения с сервером');ws.send(JSON.stringify(o))}
 
+async function checkServer(){
+  base=$('authServer').value.trim().replace(/\/$/,'')||'http://192.168.3.3:8080';
+  localStorage.setItem('serverUrl',base);
+  const el=$('serverCheckState');el.className='state';el.textContent='Проверяю '+base+' ...';
+  try{
+    const ctrl=new AbortController();const timer=setTimeout(()=>ctrl.abort(),5000);
+    const r=await fetch(base+'/health',{signal:ctrl.signal});clearTimeout(timer);
+    const d=await r.json();
+    if(!r.ok||!d.ok)throw Error('bad');
+    el.className='state server-ok';el.textContent='✓ Сервер найден: '+(d.name||'ICQ Reborn Server');
+    return true;
+  }catch(e){
+    el.className='state server-bad';el.textContent='✕ Сервер недоступен. Проверь START_ICQ_REBORN.bat, Wi‑Fi и адрес ПК.';
+    return false;
+  }
+}
+$('checkServer').onclick=checkServer;
+$('useHomeServer').onclick=()=>{$('authServer').value='http://192.168.3.3:8080';checkServer()};
 $('loginBtn').onclick=async()=>{
-  try{base=$('authServer').value.trim().replace(/\/$/,'');localStorage.setItem('serverUrl',base);const r=await api('/api/login',{method:'POST',body:JSON.stringify({uin:$('loginUin').value.trim(),password:$('loginPass').value})});token=r.token;localStorage.setItem('token',token);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}
+  try{base=$('authServer').value.trim().replace(/\/$/,'')||'http://192.168.3.3:8080';localStorage.setItem('serverUrl',base);const r=await api('/api/login',{method:'POST',body:JSON.stringify({uin:$('loginUin').value.trim(),password:$('loginPass').value})});token=r.token;localStorage.setItem('token',token);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}
 };
 $('regBtn').onclick=async()=>{
-  try{base=$('authServer').value.trim().replace(/\/$/,'');localStorage.setItem('serverUrl',base);const r=await api('/api/register',{method:'POST',body:JSON.stringify({nick:$('regNick').value.trim(),password:$('regPass').value})});token=r.token;localStorage.setItem('token',token);toast('Твой UIN: '+r.user.uin);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}
+  try{base=$('authServer').value.trim().replace(/\/$/,'')||'http://192.168.3.3:8080';localStorage.setItem('serverUrl',base);const r=await api('/api/register',{method:'POST',body:JSON.stringify({nick:$('regNick').value.trim(),password:$('regPass').value})});token=r.token;localStorage.setItem('token',token);toast('Твой UIN: '+r.user.uin);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}
 };
 $('showReg').onclick=()=>{$('loginCard').classList.add('hide');$('regCard').classList.remove('hide')};
 $('showLogin').onclick=()=>{$('regCard').classList.add('hide');$('loginCard').classList.remove('hide')};
