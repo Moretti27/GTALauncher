@@ -1,4 +1,4 @@
-# ICQ Reborn Server v0.28
+# ICQ Reborn Server v0.29
 
 ICQ Reborn uses a PC-hosted Node.js server on TCP port **22005**.
 
@@ -47,7 +47,7 @@ The server listens on `0.0.0.0:22005`, so the router can forward TCP 22005 to it
 
 For public access to work, the Windows PC must be online, the Node.js server must be running, Windows Firewall must allow TCP 22005, and the router port-forward must point to the PC's current LAN IPv4 address.
 
-If the ISP changes the public IPv4 address, update `publicBaseUrl` in `server-config.json`. Installed v0.28 clients will discover the new address automatically.
+If the ISP changes the public IPv4 address, update `publicBaseUrl` in `server-config.json`. Installed v0.29 clients will discover the new address automatically.
 
 ## Security note
 
