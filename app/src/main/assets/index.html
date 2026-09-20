@@ -8,7 +8,8 @@
 <div style="font-size:56px;text-align:center">🌼</div><h2>ICQ <span style="color:var(--green)">Reborn</span></h2>
 <div class="card"><div class="sectionTitle">Сервер</div><input id="authServer" class="f" style="width:100%"><button id="checkServer" class="primary" style="width:100%;margin-top:8px">Проверить подключение</button><div id="serverCheckState" class="state"></div></div>
 <div id="loginCard" class="card"><div class="sectionTitle">Вход</div><input id="loginUin" class="f" style="width:100%" placeholder="UIN"><input id="loginPass" class="f" type="password" style="width:100%;margin-top:8px" placeholder="Пароль"><div class="row" style="margin-top:8px"><button id="loginBtn" class="primary grow">Войти</button><button id="showReg" class="grow">Регистрация</button></div><div id="authState" class="state"></div></div>
-<div id="regCard" class="card hide"><div class="sectionTitle">Регистрация</div><input id="regNick" class="f" style="width:100%" placeholder="Ник"><input id="regPhone" class="f" inputmode="tel" style="width:100%;margin-top:8px" placeholder="Номер телефона"><input id="regPass" class="f" type="password" style="width:100%;margin-top:8px" placeholder="Пароль, минимум 6 символов"><div class="row" style="margin-top:8px"><button id="regBtn" class="primary grow">Создать аккаунт</button><button id="showLogin">Назад</button></div></div>
+<div id="regCard" class="card hide"><div class="sectionTitle">Регистрация нового аккаунта</div><input id="regNick" class="f" style="width:100%" placeholder="Ник"><input id="regPhone" class="f" inputmode="tel" style="width:100%;margin-top:8px" placeholder="Номер телефона"><input id="regPass" class="f" type="password" style="width:100%;margin-top:8px" placeholder="Пароль, минимум 6 символов"><input id="regPass2" class="f" type="password" style="width:100%;margin-top:8px" placeholder="Повторите пароль"><div class="notice" style="margin-top:10px">После регистрации сервер создаст постоянный UIN. Для входа на другом устройстве понадобятся UIN и пароль.</div><div class="row" style="margin-top:8px"><button id="regBtn" class="primary grow">Создать аккаунт</button><button id="showLogin">Назад ко входу</button></div><div id="regState" class="state"></div></div>
+<div id="regDoneCard" class="card hide"><div class="sectionTitle">Аккаунт создан</div><div style="text-align:center;padding:8px 0"><div class="sub">Ваш UIN</div><div id="newUin" style="font-size:34px;font-weight:900;letter-spacing:.08em;color:var(--green)">00000000</div><div class="notice" style="margin-top:10px">Сохрани этот UIN. По нему можно войти в аккаунт на другом устройстве.</div></div><div class="row"><button id="copyNewUin" class="grow">Копировать UIN</button><button id="goLogin" class="primary grow">Войти по UIN</button></div></div>
 </div>
 <div id="appView" class="hide">
 <div class="top"><div class="flower">🌼</div><div><b>ICQ Reborn</b><div id="head" class="sub"></div></div><div class="grow"></div><span id="serverState" class="pill">offline</span></div>
@@ -62,9 +63,28 @@ function show(n){document.querySelectorAll('.screen').forEach(x=>x.classList.tog
 function showAuth(){$('authView').classList.remove('hide');$('appView').classList.add('hide');$('authServer').value=base}
 function showApp(){$('authView').classList.add('hide');$('appView').classList.remove('hide');$('serverUrl').value=base}
 async function checkServer(){base=$('authServer').value.trim().replace(/\/$/,'')||'http://192.168.3.3:22005';storeSet('serverUrl',base);try{let r=await fetch(base+'/health'),d=await r.json();if(!d.ok)throw Error();$('serverCheckState').textContent='✓ Сервер найден · v'+d.version;return true}catch(_){$('serverCheckState').textContent='✕ Сервер недоступен';return false}}
-$('checkServer').onclick=checkServer;$('showReg').onclick=()=>{$('loginCard').classList.add('hide');$('regCard').classList.remove('hide')};$('showLogin').onclick=()=>{$('regCard').classList.add('hide');$('loginCard').classList.remove('hide')};
-$('loginBtn').onclick=async()=>{try{if(!(await checkServer()))return;let r=await api('/api/login',{method:'POST',body:JSON.stringify({uin:$('loginUin').value.trim(),password:$('loginPass').value})});token=r.token;storeSet('token',token);storeSet('uin',r.user.uin);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}};
-$('regBtn').onclick=async()=>{try{if(!(await checkServer()))return;let p=$('regPhone').value.trim(),r=await api('/api/register',{method:'POST',body:JSON.stringify({nick:$('regNick').value.trim(),password:$('regPass').value,phoneHashes:p?await phoneHashes(p):[]})});if(p)storeSet('myPhone',p);token=r.token;storeSet('token',token);storeSet('uin',r.user.uin);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}};
+$('checkServer').onclick=checkServer;$('showReg').onclick=()=>{$('loginCard').classList.add('hide');$('regDoneCard').classList.add('hide');$('regCard').classList.remove('hide')};$('showLogin').onclick=()=>{$('regCard').classList.add('hide');$('regDoneCard').classList.add('hide');$('loginCard').classList.remove('hide')};
+$('loginBtn').onclick=async()=>{try{if(!(await checkServer()))return;const uin=$('loginUin').value.replace(/\D/g,''),password=$('loginPass').value;if(uin.length!==8)throw Error('Введите 8-значный UIN');if(!password)throw Error('Введите пароль');$('authState').textContent='Выполняю вход…';let r=await api('/api/login',{method:'POST',body:JSON.stringify({uin,password})});token=r.token;storeSet('token',token);storeSet('uin',r.user.uin);$('authState').textContent='';await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}};
+$('regBtn').onclick=async()=>{try{
+ if(!(await checkServer()))return;
+ const nick=$('regNick').value.trim(),p=$('regPhone').value.trim(),pass=$('regPass').value,pass2=$('regPass2').value;
+ if(nick.length<2)throw Error('Введите ник минимум из 2 символов');
+ if(pass.length<6)throw Error('Пароль минимум 6 символов');
+ if(pass!==pass2)throw Error('Пароли не совпадают');
+ $('regState').textContent='Создаю аккаунт на сервере…';
+ const r=await api('/api/register',{method:'POST',body:JSON.stringify({nick,password:pass,phone:p,phoneHashes:p?await phoneHashes(p):[]})});
+ if(p)storeSet('myPhone',p);
+ storeSet('lastRegisteredUin',r.uin);
+ $('newUin').textContent=r.uin;
+ $('loginUin').value=r.uin;
+ $('loginPass').value='';
+ $('regState').textContent='';
+ $('regCard').classList.add('hide');
+ $('loginCard').classList.add('hide');
+ $('regDoneCard').classList.remove('hide');
+}catch(e){$('regState').textContent=e.message}};
+$('copyNewUin').onclick=()=>{const u=$('newUin').textContent;try{NativeBridge.copy(u)}catch(_){navigator.clipboard?.writeText(u)}};
+$('goLogin').onclick=()=>{$('regDoneCard').classList.add('hide');$('loginCard').classList.remove('hide');$('loginUin').value=storeGet('lastRegisteredUin')||$('newUin').textContent;$('authState').textContent='Введите пароль от созданного аккаунта'};
 async function afterAuth(u){me=u;cacheSet('me',me);showApp();renderMe();await Promise.all([loadContacts(),loadGroups()]);connectWs();try{NativeBridge.bg(false);NativeBridge.play('startup')}catch(_){}}
 function renderMe(){if(me)cacheSet('me',me);$('uin').textContent=me.uin;$('meName').textContent=me.nick;setAvatarEl($('meAvatar'),me);setAvatarEl($('settingsAvatar'),me);$('head').textContent=me.nick+' · '+me.status;$('status').value=me.status||'ONLINE';$('nick').value=me.nick;$('myPhone').value='';$('phoneSummary').textContent=me.phoneLinked?'Номер привязан. Для замены введи новый номер ниже.':'Номер не привязан.'}
 async function loadContacts(){try{contacts=await api('/api/contacts');cacheSet('contacts',contacts)}catch(_){contacts=cacheGet('contacts',[])}renderContacts();renderMemberChips()}
@@ -78,8 +98,8 @@ async function handleAvatarInput(e){const f=e.target.files?.[0];if(!f)return;try
 $('avatarFile').onchange=handleAvatarInput;
 $('avatarCamera').onchange=handleAvatarInput;
 $('removeAvatar').onclick=async()=>{try{me=await api('/api/me/avatar',{method:'POST',body:JSON.stringify({data:''})});renderMe();$('avatarState').textContent='Аватар удалён'}catch(e){toast(e.message)}};
-$('savePhone').onclick=async()=>{let p=$('myPhone').value.trim();if(!p)return toast('Введи новый номер');const hashes=await phoneHashes(p);storeSet('myPhone',p);try{me=await api('/api/me',{method:'PATCH',body:JSON.stringify({phoneHashes:hashes})});renderMe();toast('Номер заменён')}catch(_){queuePush({type:'phone',hashes});toast('Номер сохранён на телефоне и синхронизируется позже')}};
-$('unlinkPhone').onclick=async()=>{try{me=await api('/api/me',{method:'PATCH',body:JSON.stringify({phoneHashes:[]})});storeRemove('myPhone');renderMe();toast('Номер отвязан')}catch(e){toast(e.message)}};
+$('savePhone').onclick=async()=>{let p=$('myPhone').value.trim();if(!p)return toast('Введи новый номер');const hashes=await phoneHashes(p);storeSet('myPhone',p);try{me=await api('/api/me',{method:'PATCH',body:JSON.stringify({phoneHashes:hashes,phoneNumber:p})});renderMe();toast('Номер заменён')}catch(_){queuePush({type:'phone',hashes});toast('Номер сохранён на телефоне и синхронизируется позже')}};
+$('unlinkPhone').onclick=async()=>{try{me=await api('/api/me',{method:'PATCH',body:JSON.stringify({phoneHashes:[],phoneNumber:''})});storeRemove('myPhone');renderMe();toast('Номер отвязан')}catch(e){toast(e.message)}};
 
 async function loadGroups(){try{groups=await api('/api/groups');cacheSet('groups',groups)}catch(_){groups=cacheGet('groups',[])}let e=$('groupList');e.innerHTML='';if(!groups.length)e.innerHTML='<div class="state">Групп пока нет.</div>';for(const g of groups){let d=document.createElement('div');d.className='group';d.innerHTML='<div class="avatar">👥</div><div class="grow"><b>'+esc(g.name)+'</b><div class="state">'+g.members.length+' участников</div></div><button>Открыть</button>';d.querySelector('button').onclick=()=>{chatMode='group';selGroup=g.id;sel='';show('chat')};e.appendChild(d)}}
 $('createGroup').onclick=async()=>{const name=$('groupName').value.trim(),members=[...document.querySelectorAll('#memberChips input:checked')].map(x=>x.value);if(!name)return;try{let g=await api('/api/groups',{method:'POST',body:JSON.stringify({name,members})});$('groupName').value='';await loadGroups();chatMode='group';selGroup=g.id;show('chat')}catch(_){queuePush({type:'createGroup',name,members});groups.push({id:'local-'+Date.now(),name,owner:me.uin,members:[me.uin,...members]});cacheSet('groups',groups);$('groupName').value='';loadGroups();toast('Группа сохранена локально и создастся после появления сети')}};
@@ -109,7 +129,7 @@ $('reject').onclick=()=>{if(pendingCall)wsSend({type:'call-signal',to:pendingCal
 $('saveServer').onclick=()=>{base=$('serverUrl').value.trim().replace(/\/$/,'');storeSet('serverUrl',base);connectWs();toast('Адрес сохранён')};$('logout').onclick=()=>{token='';storeRemove('token');storeRemove('uin');try{ws?.close()}catch(_){}showAuth()};
 (async()=>{
   $('authServer').value=base;$('serverUrl').value=base;
-  if(!token){showAuth();return}
+  if(!token){showAuth();$('loginUin').value=storeGet('uin')||storeGet('lastRegisteredUin')||'';return}
   try{
     const r=await fetch(base+'/api/me',{headers:{'Authorization':'Bearer '+token}});
     if(r.status===401){token='';storeRemove('token');storeRemove('uin');showAuth();return}
