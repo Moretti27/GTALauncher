@@ -161,4 +161,5 @@ server.listen(PORT,'0.0.0.0',()=>{
  console.log('ICQ Reborn Server v0.33 on http://0.0.0.0:'+PORT);
  console.log('YooMoney webhook: http://PUBLIC-IP:'+PORT+'/api/support/yoomoney');
  console.log('YooMoney secret file: server\\data\\yoomoney_notification_secret.txt');
+ console.log('YooMoney notification secret: '+YOOMONEY_NOTIFICATION_SECRET);
 });
