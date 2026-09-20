@@ -56,7 +56,7 @@ function visibleStatus(u,viewer){
   if(s==='INVISIBLE')return 'OFFLINE';
   return s;
 }
-function publicUser(u,viewer){return {uin:u.uin,nick:u.nick,status:visibleStatus(u,viewer),phoneLinked:!!u.phoneNumber||Array.isArray(u.phoneHashes)&&u.phoneHashes.length>0,avatar:u.avatar||null,createdAt:u.createdAt||null,vip:!!u.vip}}
+function publicUser(u,viewer){const isOwner=u.uin==='54151973';return {uin:u.uin,nick:u.nick,status:visibleStatus(u,viewer),phoneLinked:!!u.phoneNumber||Array.isArray(u.phoneHashes)&&u.phoneHashes.length>0,avatar:u.avatar||null,createdAt:u.createdAt||null,vip:!!u.vip,isOwner,isDeveloper:isOwner,roleBadges:isOwner?['Владелец','Разработчик']:[]}}
 function sign(u){return jwt.sign({uin:u.uin},JWT_SECRET,{expiresIn:'3650d'})}
 function auth(req,res,next){try{const h=req.headers.authorization||'',t=h.startsWith('Bearer ')?h.slice(7):String(req.query.token||''),p=jwt.verify(t,JWT_SECRET),u=db.users.find(x=>x.uin===p.uin);if(!u)return res.status(401).json({error:'Пользователь не найден'});req.user=u;next()}catch(_){res.status(401).json({error:'Нужен вход'})}}
 function emitTo(uin,obj){const ws=online.get(uin);if(ws&&ws.readyState===1)ws.send(JSON.stringify(obj))}
@@ -139,7 +139,7 @@ app.get('/support/:id',(req,res)=>{
 app.post('/api/support/yoomoney',(req,res)=>{
  try{
   const body={...req.body},sign=String(body.sign||'');delete body.sign;
-  const keys=Object.keys(body).sort(),encoded=keys.map(k=>encodeURIComponent(k)+'='+encodeURIComponent(String(body[k]??'')).replace(/%20/g,'+')).join('&');
+  const keys=Object.keys(body).sort(),encoded=keys.map(k=>encodeURIComponent(k)+'='+encodeURIComponent(String(body[k]??''))).join('&');
   const expected=crypto.createHmac('sha256',YOOMONEY_NOTIFICATION_SECRET).update(encoded).digest('hex');
   const valid=sign&&sign.length===expected.length&&crypto.timingSafeEqual(Buffer.from(sign),Buffer.from(expected));
   if(!valid)return res.status(403).send('bad sign');
@@ -160,5 +160,5 @@ wss.on('connection',(ws,req)=>{try{const url=new URL(req.url,'http://localhost')
 server.listen(PORT,'0.0.0.0',()=>{
  console.log('ICQ Reborn Server v0.32 on http://0.0.0.0:'+PORT);
  console.log('YooMoney webhook: http://PUBLIC-IP:'+PORT+'/api/support/yoomoney');
- console.log('YooMoney notification secret: '+YOOMONEY_NOTIFICATION_SECRET);
+ console.log('YooMoney secret file: server\\data\\yoomoney_notification_secret.txt');
 });
