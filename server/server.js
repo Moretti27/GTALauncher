@@ -26,7 +26,7 @@ fs.mkdirSync(DATA_DIR,{recursive:true});fs.mkdirSync(FILE_DIR,{recursive:true});
 
 function load(){try{return JSON.parse(fs.readFileSync(DB_FILE,'utf8'))}catch(_){return {users:[],contacts:{},messages:[],groups:[],groupMessages:[]}}}
 let db=load();db.users??=[];db.contacts??={};db.messages??=[];db.groups??=[];db.groupMessages??=[];db.events??=[];
-function save(){const t=DB_FILE+'.tmp';fs.writeFileSync(t,JSON.stringify(db,null,2),'utf8');fs.renameSync(t,DB_FILE)}
+function save(){const t=DB_FILE+'.tmp',b=DB_FILE+'.bak';const json=JSON.stringify(db,null,2);fs.writeFileSync(t,json,'utf8');try{if(fs.existsSync(DB_FILE))fs.copyFileSync(DB_FILE,b)}catch(_){}fs.renameSync(t,DB_FILE)}
 function uid(){return Date.now().toString(36)+crypto.randomBytes(5).toString('hex')}
 function makeUin(){for(let i=0;i<1000;i++){const u=String(Math.floor(10000000+Math.random()*90000000));if(!db.users.some(x=>x.uin===u))return u}throw Error('UIN generation failed')}
 const online=new Map();
@@ -37,7 +37,7 @@ function visibleStatus(u,viewer){
   if(s==='INVISIBLE')return 'OFFLINE';
   return s;
 }
-function publicUser(u,viewer){return {uin:u.uin,nick:u.nick,status:visibleStatus(u,viewer),phoneLinked:Array.isArray(u.phoneHashes)&&u.phoneHashes.length>0,avatar:u.avatar||null}}
+function publicUser(u,viewer){return {uin:u.uin,nick:u.nick,status:visibleStatus(u,viewer),phoneLinked:!!u.phoneNumber||Array.isArray(u.phoneHashes)&&u.phoneHashes.length>0,avatar:u.avatar||null,createdAt:u.createdAt||null}}
 function sign(u){return jwt.sign({uin:u.uin},JWT_SECRET,{expiresIn:'3650d'})}
 function auth(req,res,next){try{const h=req.headers.authorization||'',t=h.startsWith('Bearer ')?h.slice(7):String(req.query.token||''),p=jwt.verify(t,JWT_SECRET),u=db.users.find(x=>x.uin===p.uin);if(!u)return res.status(401).json({error:'Пользователь не найден'});req.user=u;next()}catch(_){res.status(401).json({error:'Нужен вход'})}}
 function emitTo(uin,obj){const ws=online.get(uin);if(ws&&ws.readyState===1)ws.send(JSON.stringify(obj))}
@@ -47,11 +47,32 @@ function safeName(n){return String(n||'file').replace(/[\\/:*?"<>|]/g,'_').slice
 function addEvent(to,type,data){db.events.push({id:uid(),to:String(to),type,ts:Date.now(),data});if(db.events.length>20000)db.events=db.events.slice(-15000)}
 
 const app=express();app.use(cors());app.use(express.json({limit:'140mb'}));
-app.get('/health',(req,res)=>res.json({ok:true,name:'ICQ Reborn Server',version:'0.25.0'}));
-app.post('/api/register',async(req,res)=>{try{const nick=String(req.body.nick||'').trim().slice(0,32),password=String(req.body.password||'');if(nick.length<2)return res.status(400).json({error:'Ник минимум 2 символа'});if(password.length<6)return res.status(400).json({error:'Пароль минимум 6 символов'});const uin=makeUin(),passwordHash=await bcrypt.hash(password,10),phoneHashes=Array.isArray(req.body.phoneHashes)?req.body.phoneHashes.filter(x=>/^[a-f0-9]{64}$/i.test(String(x))).slice(0,6):[];const user={uin,nick,passwordHash,phoneHashes,status:'ONLINE',createdAt:Date.now()};db.users.push(user);db.contacts[uin]=[];save();res.json({token:sign(user),user:publicUser(user,uin)})}catch(e){res.status(500).json({error:e.message})}});
-app.post('/api/login',async(req,res)=>{const u=db.users.find(x=>x.uin===String(req.body.uin||'').trim());if(!u||!(await bcrypt.compare(String(req.body.password||''),u.passwordHash)))return res.status(401).json({error:'Неверный UIN или пароль'});res.json({token:sign(u),user:publicUser(u,u.uin)})});
+app.get('/health',(req,res)=>res.json({ok:true,name:'ICQ Reborn Server',version:'0.26.0'}));
+app.post('/api/register',async(req,res)=>{try{
+ const nick=String(req.body.nick||'').trim().slice(0,32);
+ const password=String(req.body.password||'');
+ const phoneNumber=String(req.body.phone||'').replace(/[^0-9+]/g,'').slice(0,24);
+ const phoneHashes=Array.isArray(req.body.phoneHashes)?req.body.phoneHashes.filter(x=>/^[a-f0-9]{64}$/i.test(String(x))).slice(0,6):[];
+ if(nick.length<2)return res.status(400).json({error:'Ник минимум 2 символа'});
+ if(password.length<6)return res.status(400).json({error:'Пароль минимум 6 символов'});
+ if(phoneNumber&&db.users.some(x=>x.phoneNumber===phoneNumber))return res.status(409).json({error:'Этот номер уже привязан к аккаунту'});
+ const uin=makeUin(),passwordHash=await bcrypt.hash(password,12),now=Date.now();
+ const user={uin,nick,passwordHash,phoneNumber,phoneHashes,status:'ONLINE',createdAt:now,lastLoginAt:null};
+ db.users.push(user);db.contacts[uin]=[];save();
+ res.status(201).json({ok:true,uin,user:publicUser(user,uin),message:'Аккаунт создан'});
+}catch(e){res.status(500).json({error:'Не удалось создать аккаунт'})}});
+app.post('/api/login',async(req,res)=>{try{
+ const uin=String(req.body.uin||'').replace(/\D/g,'');
+ const password=String(req.body.password||'');
+ if(!/^\d{8}$/.test(uin))return res.status(400).json({error:'Введите корректный 8-значный UIN'});
+ const u=db.users.find(x=>x.uin===uin);
+ if(!u||!u.passwordHash||!(await bcrypt.compare(password,u.passwordHash)))return res.status(401).json({error:'Неверный UIN или пароль'});
+ u.lastLoginAt=Date.now();save();
+ res.json({token:sign(u),user:publicUser(u,u.uin)});
+}catch(e){res.status(500).json({error:'Ошибка входа'})}});
+app.get('/api/account',auth,(req,res)=>res.json({uin:req.user.uin,nick:req.user.nick,phone:req.user.phoneNumber||'',createdAt:req.user.createdAt||null,lastLoginAt:req.user.lastLoginAt||null}));
 app.get('/api/me',auth,(req,res)=>res.json(publicUser(req.user,req.user.uin)));
-app.patch('/api/me',auth,(req,res)=>{if(req.body.nick!=null)req.user.nick=String(req.body.nick).trim().slice(0,32)||req.user.nick;if(req.body.status!=null&&['ONLINE','AWAY','DND','OCCUPIED','INVISIBLE'].includes(String(req.body.status)))req.user.status=String(req.body.status);if(Array.isArray(req.body.phoneHashes))req.user.phoneHashes=req.body.phoneHashes.filter(x=>/^[a-f0-9]{64}$/i.test(String(x))).slice(0,6);save();broadcastPresence(req.user.uin);res.json(publicUser(req.user,req.user.uin))});
+app.patch('/api/me',auth,(req,res)=>{if(req.body.nick!=null)req.user.nick=String(req.body.nick).trim().slice(0,32)||req.user.nick;if(req.body.status!=null&&['ONLINE','AWAY','DND','OCCUPIED','INVISIBLE'].includes(String(req.body.status)))req.user.status=String(req.body.status);if(Array.isArray(req.body.phoneHashes))req.user.phoneHashes=req.body.phoneHashes.filter(x=>/^[a-f0-9]{64}$/i.test(String(x))).slice(0,6);if(req.body.phoneNumber!=null)req.user.phoneNumber=String(req.body.phoneNumber||'').replace(/[^0-9+]/g,'').slice(0,24);save();broadcastPresence(req.user.uin);res.json(publicUser(req.user,req.user.uin))});
 
 app.post('/api/me/avatar',auth,(req,res)=>{try{const raw=String(req.body.data||'');if(!raw){req.user.avatar=null;save();broadcastPresence(req.user.uin);return res.json(publicUser(req.user,req.user.uin))}const m=raw.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/i);if(!m)return res.status(400).json({error:'Нужен PNG/JPEG/WEBP'});const buf=Buffer.from(m[2],'base64');if(buf.length>100*1024*1024)return res.status(413).json({error:'Аватар максимум 100 МБ'});req.user.avatar=raw;save();broadcastPresence(req.user.uin);res.json(publicUser(req.user,req.user.uin))}catch(e){res.status(500).json({error:e.message})}});
 
@@ -72,4 +93,4 @@ app.post('/api/groups/:id/messages',auth,(req,res)=>{const g=groupFor(req.params
 
 const server=http.createServer(app),wss=new WebSocketServer({server,path:'/ws'});
 wss.on('connection',(ws,req)=>{try{const url=new URL(req.url,'http://localhost'),p=jwt.verify(url.searchParams.get('token')||'',JWT_SECRET),user=db.users.find(x=>x.uin===p.uin);if(!user){ws.close();return}online.set(user.uin,ws);ws.uin=user.uin;ws.send(JSON.stringify({type:'hello',user:publicUser(user,user.uin)}));broadcastPresence(user.uin);ws.on('message',buf=>{try{const m=JSON.parse(String(buf));if(m.type==='call-signal'&&m.to)emitTo(String(m.to),{type:'call-signal',from:user.uin,fromUser:publicUser(user,String(m.to)),signalType:m.signalType,payload:m.payload});if(m.type==='typing'&&m.to)emitTo(String(m.to),{type:'typing',from:user.uin,value:!!m.value})}catch(_){}});ws.on('close',()=>{if(online.get(user.uin)===ws)online.delete(user.uin);broadcastPresence(user.uin)})}catch(_){ws.close()}});
-server.listen(PORT,'0.0.0.0',()=>console.log('ICQ Reborn Server v0.25 on http://0.0.0.0:'+PORT));
+server.listen(PORT,'0.0.0.0',()=>console.log('ICQ Reborn Server v0.26 on http://0.0.0.0:'+PORT));
