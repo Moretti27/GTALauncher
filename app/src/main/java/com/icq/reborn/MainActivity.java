@@ -18,8 +18,8 @@ public class MainActivity extends Activity{
  volatile boolean appForeground=false;
  static final String MSG_CH="icq_retro_messages", CONTACT_CH="icq_retro_contacts", CALL_CH="icq_retro_calls";
 
- protected void onResume(){super.onResume();appForeground=true;}
- protected void onPause(){appForeground=false;super.onPause();}
+ protected void onResume(){super.onResume();appForeground=true;BackgroundSyncReceiver.cancel(this);}
+ protected void onPause(){appForeground=false;String t=getSharedPreferences("icq_reborn",MODE_PRIVATE).getString("token","");if(!t.isEmpty())BackgroundSyncReceiver.schedule(this,true);super.onPause();}
  public void onCreate(Bundle b){
   super.onCreate(b); askBase();
   createChannels();
@@ -129,9 +129,9 @@ public class MainActivity extends Activity{
  void notifyUser(String title,String text,String type){
   runOnUiThread(()->{
    try{
-    playRetro(type);
-    if(appForeground)return;
+    if(appForeground){playRetro(type);return;}
     if(Build.VERSION.SDK_INT>=33&&!ok(Manifest.permission.POST_NOTIFICATIONS))return;
+    playRetro(type);
     Intent i=new Intent(this,MainActivity.class);
     PendingIntent p=PendingIntent.getActivity(this,0,i,PendingIntent.FLAG_IMMUTABLE|PendingIntent.FLAG_UPDATE_CURRENT);
     String ch="call".equals(type)?CALL_CH:("auth".equals(type)||"online".equals(type)?CONTACT_CH:MSG_CH);
@@ -160,7 +160,8 @@ public class MainActivity extends Activity{
   @JavascriptInterface public void copy(String t){runOnUiThread(()->{((android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("ICQ Reborn",t));Toast.makeText(MainActivity.this,"Скопировано",Toast.LENGTH_SHORT).show();});}
   @JavascriptInterface public void share(String t){runOnUiThread(()->{Intent i=new Intent(Intent.ACTION_SEND);i.setType("text/plain");i.putExtra(Intent.EXTRA_TEXT,t);startActivity(Intent.createChooser(i,"Поделиться"));});}
   @JavascriptInterface public void toast(String t){runOnUiThread(()->Toast.makeText(MainActivity.this,t,Toast.LENGTH_SHORT).show());}
-  @JavascriptInterface public void bg(boolean on){runOnUiThread(()->{Intent i=new Intent(MainActivity.this,P2PForegroundService.class);if(on){if(Build.VERSION.SDK_INT>=26)startForegroundService(i);else startService(i);}else stopService(i);});}
+  @JavascriptInterface public void bg(boolean on){runOnUiThread(()->{if(on)BackgroundSyncReceiver.schedule(MainActivity.this,true);else BackgroundSyncReceiver.cancel(MainActivity.this);});}
+  @JavascriptInterface public boolean isForeground(){return appForeground;}
   @JavascriptInterface public void play(String type){playRetro(type);}
   @JavascriptInterface public void notify(String title,String text,String type){notifyUser(title,text,type);}
   @JavascriptInterface public boolean hasContactsPermission(){return ok(Manifest.permission.READ_CONTACTS);}
