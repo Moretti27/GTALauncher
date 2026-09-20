@@ -1,16 +1,51 @@
-# ICQ Reborn Server v0.16
+# ICQ Reborn Server v0.22
 
-Windows:
-1. Install Node.js 20+.
-2. Run START_SERVER.bat.
-3. On the PC, run `ipconfig` and note the IPv4 address, e.g. `192.168.1.50`.
-4. In ICQ Reborn on a phone connected to the same Wi-Fi, set the server to:
-   `http://192.168.1.50:22005`
+ICQ Reborn uses a PC-hosted Node.js server on TCP port **22005**.
 
-For access from mobile Internet outside your home network, the PC must be reachable from the Internet:
-- port-forward TCP 22005 on the router to the PC, or
-- use a secure tunnel/reverse proxy.
-If your ISP uses CGNAT, ordinary port forwarding may not work.
+## Windows
 
-Before public use, set a strong JWT_SECRET and put the server behind HTTPS/WSS.
-User passwords are stored as bcrypt hashes.
+1. Use the automatic PC Host package, or install Node.js 20+.
+2. Run `START_SERVER.bat`.
+3. Keep the server window open.
+4. On the phone, use the PC LAN address, for example:
+
+```
+http://192.168.3.3:22005
+```
+
+The exact IPv4 address depends on the PC/network.
+
+## Persistent data
+
+All persistent server data is under:
+
+```
+server/data/
+```
+
+Important files/directories:
+
+- `db.json` — accounts, contacts, messages, groups.
+- `files/` — uploaded chat/group files.
+- `server_secret.txt` — persistent JWT signing secret.
+
+**Do not delete `server_secret.txt`** unless you intentionally want all saved sessions to become invalid.
+
+## Features
+
+- UIN registration/login.
+- Persistent sessions.
+- Contact list and phone-contact matching.
+- Presence statuses: ONLINE, AWAY, DND, OCCUPIED, INVISIBLE, OFFLINE.
+- Direct messages.
+- Groups and group chat.
+- File transfer up to 100 MB per file.
+- WebSocket signaling for audio/video calls.
+
+## Network
+
+For devices on the same Wi-Fi/LAN, connect directly to the PC IPv4 address.
+
+For access from outside the home network, use HTTPS/WSS behind a secure reverse proxy or tunnel. Plain public HTTP is not recommended.
+
+Audio/video calls use WebRTC. Direct LAN calls should work without TURN; calls across restrictive NAT/CGNAT networks may require a TURN server.
