@@ -18,8 +18,8 @@ public class MainActivity extends Activity{
  volatile boolean appForeground=false;
  static final String MSG_CH="icq_retro_messages", CONTACT_CH="icq_retro_contacts", CALL_CH="icq_retro_calls";
 
- protected void onResume(){super.onResume();appForeground=true;BackgroundSyncReceiver.cancel(this);}
- protected void onPause(){appForeground=false;String t=getSharedPreferences("icq_reborn",MODE_PRIVATE).getString("token","");if(!t.isEmpty())BackgroundSyncReceiver.schedule(this,true);super.onPause();}
+ protected void onResume(){super.onResume();appForeground=true;BackgroundSyncReceiver.cancel(this);if(w!=null)w.evaluateJavascript("window.icqForeground&&window.icqForeground()",null);}
+ protected void onPause(){appForeground=false;if(w!=null)w.evaluateJavascript("window.icqBackground&&window.icqBackground()",null);String t=getSharedPreferences("icq_reborn",MODE_PRIVATE).getString("token","");if(!t.isEmpty())BackgroundSyncReceiver.schedule(this,true);super.onPause();}
  public void onCreate(Bundle b){
   super.onCreate(b); askBase();
   createChannels();
