@@ -26,6 +26,7 @@
 <div class="card"><div class="sectionTitle">Профиль</div><div class="settingsAvatar"><div id="settingsAvatar" class="profileAvatar">?</div><div class="grow"><label class="primary" style="display:inline-block;padding:10px 12px;border-radius:14px;cursor:pointer">Галерея<input id="avatarFile" type="file" accept="image/*" hidden></label><label class="softBtn" style="display:inline-block;padding:10px 12px;border-radius:14px;cursor:pointer;margin-left:6px">Камера<input id="avatarCamera" type="file" accept="image/*" capture="user" hidden></label><button id="removeAvatar" class="softBtn" style="margin-left:6px">Удалить</button><div id="avatarState" class="state">PNG, JPG или WEBP · исходное изображение до 100 МБ</div></div></div><input id="nick" class="f" style="width:100%;margin-top:12px" placeholder="Ник"><button id="save" class="primary" style="width:100%;margin-top:8px">Сохранить профиль</button></div>
 <div class="card"><div class="sectionTitle">Телефон</div><div id="phoneSummary" class="phoneLinked"></div><input id="myPhone" class="f" inputmode="tel" style="width:100%;margin-top:8px" placeholder="Новый номер телефона"><div class="row" style="margin-top:8px"><button id="savePhone" class="primary grow">Привязать / заменить</button><button id="unlinkPhone">Отвязать</button></div></div>
 <div class="card"><div class="sectionTitle">Сеть</div><div class="notice">Подключение настраивается автоматически и работает через Wi‑Fi или мобильную сеть. Пользователю не нужно вводить IP или порт.</div><div id="resolvedServer" class="state" style="margin-top:8px"></div></div>
+<div class="card"><div class="sectionTitle">Встроенные сетевые профили</div><div class="notice">ICQ Reborn читает встроенные .conf-профили и показывает их сетевые параметры. Это не запускает VPN-туннель.</div><select id="amProfile" class="f" style="width:100%;margin-top:8px"></select><div id="amProfileInfo" class="phoneLinked" style="margin-top:8px">Профили загружаются…</div></div>
 <div class="card"><button id="logout" class="danger" style="width:100%">Выйти из аккаунта</button></div>
 </section></div>
 <div class="tabs"><button class="on" data-s="contacts">Контакты</button><button data-s="groups">Группы</button><button data-s="chat">Чат</button><button data-s="calls">Звонки</button><button data-s="settings">⚙</button></div>
@@ -95,7 +96,32 @@ function setAvatarEl(el,u,fallback='?'){if(!el)return;el.innerHTML=avatarHtml(u,
 async function imageToAvatar(file){return await new Promise((resolve,reject)=>{const img=new Image(),r=new FileReader();r.onerror=()=>reject(Error('Не удалось прочитать изображение'));r.onload=()=>{img.onload=()=>{const size=512,c=document.createElement('canvas');c.width=c.height=size;const x=c.getContext('2d');const scale=Math.max(size/img.width,size/img.height),w=img.width*scale,hh=img.height*scale;x.drawImage(img,(size-w)/2,(size-hh)/2,w,hh);resolve(c.toDataURL('image/jpeg',.86))};img.onerror=()=>reject(Error('Неверное изображение'));img.src=r.result};r.readAsDataURL(file)})}
 function authHeaders(){return token?{'Authorization':'Bearer '+token}:{}}async function api(path,opt={}){if(!base){const d=await resolveServer();if(!d.ok)throw Error('Сервер недоступен')}const r=await fetch(base+path,{...opt,headers:{'Content-Type':'application/json',...authHeaders(),...(opt.headers||{})}});let d={};try{d=await r.json()}catch(_){}if(!r.ok)throw Error(d.error||('HTTP '+r.status));return d}
 function normalizePhone(s){return String(s||'').replace(/\D/g,'')}function phoneVariants(s){let d=normalizePhone(s),a=[];if(d.length>=7)a.push(d);if(d.length>9)a.push(d.slice(-9));if(d.length>10)a.push(d.slice(-10));return [...new Set(a)]}async function sha256(s){let b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}async function phoneHashes(s){let a=[];for(const v of phoneVariants(s))a.push(await sha256(v));return a}
-function show(n){document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('on',x.id===n));document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x.dataset.s===n));if(n==='chat')loadChat();if(n==='groups')loadGroups()}document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.s));
+function show(n){document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('on',x.id===n));document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x.dataset.s===n));if(n==='chat')loadChat();if(n==='groups')loadGroups();if(n==='settings')loadAmneziaProfiles()}document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.s));
+let amneziaLoaded=false;
+function amVal(o,k){return o&&o[k]!=null?String(o[k]):''}
+function renderAmneziaProfile(){
+ const sel=$('amProfile'),box=$('amProfileInfo');if(!sel||!box||!sel.value)return;
+ try{
+  const p=JSON.parse(NativeBridge.parseAmneziaProfile(sel.value)||'{}'),i=p.interface||{},q=p.peer||{};
+  const allowed=amVal(q,'AllowedIPs'),allowedShort=allowed.length>220?allowed.slice(0,220)+'…':allowed;
+  box.innerHTML='<b>'+esc(p.name||sel.value)+'</b>'+
+   '<div class="sub" style="margin-top:6px">Address: '+esc(amVal(i,'Address')||'—')+'</div>'+
+   '<div class="sub">DNS: '+esc(amVal(i,'DNS')||'—')+'</div>'+
+   '<div class="sub">MTU: '+esc(amVal(i,'MTU')||'—')+'</div>'+
+   '<div class="sub">Endpoint: '+esc(amVal(q,'Endpoint')||'—')+'</div>'+
+   '<div class="sub">AllowedIPs: '+esc(allowedShort||'—')+'</div>'+
+   '<div class="sub">Amnezia: Jc '+esc(amVal(i,'Jc')||'—')+' · Jmin '+esc(amVal(i,'Jmin')||'—')+' · Jmax '+esc(amVal(i,'Jmax')||'—')+'</div>'+
+   '<div class="state" style="margin-top:6px">Полный .conf встроен в APK и читается приложением.</div>';
+ }catch(e){box.textContent='Не удалось прочитать профиль'}
+}
+function loadAmneziaProfiles(){
+ const sel=$('amProfile');if(!sel)return;
+ try{
+  const list=JSON.parse(NativeBridge.listAmneziaProfiles()||'[]');
+  if(!amneziaLoaded){sel.innerHTML='';for(const n of list){const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o)}sel.onchange=renderAmneziaProfile;amneziaLoaded=true}
+  if(list.length)renderAmneziaProfile();else $('amProfileInfo').textContent='Встроенные профили не найдены';
+ }catch(e){$('amProfileInfo').textContent='Не удалось загрузить профили'}
+}
 function showAuth(){$('authView').classList.remove('hide');$('appView').classList.add('hide')}
 function showApp(){$('authView').classList.add('hide');$('appView').classList.remove('hide');if($('resolvedServer'))$('resolvedServer').textContent=base?'Подключено: '+base:'Сервер не найден'}
 async function checkServer(){const d=await resolveServer();if(d.ok){$('serverCheckState').textContent='✓ Сервер доступен · v'+d.version;return true}$('serverCheckState').textContent='✕ Нет соединения с сервером';return false}
