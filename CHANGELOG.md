@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.30.0-alpha
+
+- Replaced multiple Windows host BAT files with one universal `START_SERVER.bat`.
+- The launcher automatically requests Administrator rights only when the TCP 22005 Firewall rule needs to be created.
+- The launcher checks Node.js, installs missing npm dependencies, detects the LAN IPv4 address and starts the server.
+- Removed `SETUP_NETWORK.bat` and `CHECK_CONNECTION.bat` from the PC Host.
+- The same launcher structure is intended to remain compatible with future Host versions.
+- Android/server versions synchronized to v0.30.
+
 ## v0.29.0-alpha
 
 - Fixed false "main server unavailable" status in Android.
