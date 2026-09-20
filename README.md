@@ -2,7 +2,7 @@
 
 ICQ Reborn is an experimental Android messenger inspired by the feel of classic instant messengers, with its own PC-hosted backend.
 
-Current development version: **v0.25.0-alpha**
+Current development version: **v0.26.0-alpha**
 
 ## What is included
 
@@ -82,14 +82,16 @@ It contains:
 
 Deleting `server/data/server_secret.txt` invalidates existing saved login sessions.
 
-## Current v0.25 changes
+## Current v0.26 changes
 
-- Added offline-first cache for profile, contacts, groups and chat history.
-- Added a local queue for text/profile/contact/group actions while the server is unavailable.
-- Removed the permanent foreground connection/notification.
-- Background message checks now use short periodic requests instead of a permanent WebSocket.
-- Removed reconnect/online sound spam.
-- Kept avatar, calls, groups, files, status and persistent login features.
+- Registration and login are now fully separated.
+- New accounts are created and stored on the PC Host.
+- Registration returns a permanent 8-digit UIN.
+- Login uses UIN + password from any device connected to the same server.
+- Phone/account metadata is stored on the host.
+- Passwords are stored only as bcrypt hashes.
+- Database writes keep a backup copy for safer account persistence.
+- All v0.25 offline cache, background polling and notification fixes remain.
 
 ## Development status
 
