@@ -59,6 +59,7 @@ jobs:
           mkdir -p "ICQ-Reborn-PC-Host-$TAG/server"
           cp server/server.js "ICQ-Reborn-PC-Host-$TAG/server/server.js"
           cp server/package.json "ICQ-Reborn-PC-Host-$TAG/server/package.json"
+          cp server/support.json "ICQ-Reborn-PC-Host-$TAG/server/support.json"
           cp START_SERVER.bat "ICQ-Reborn-PC-Host-$TAG/START_SERVER.bat"
           cp SERVER_README.md "ICQ-Reborn-PC-Host-$TAG/SERVER_README.md"
           cp server-config.json "ICQ-Reborn-PC-Host-$TAG/server-config.json"
