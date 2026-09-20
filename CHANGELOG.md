@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.31.0-alpha
+
+- Embedded nine user-provided AmneziaWG/WARP .conf profiles in the Android APK.
+- Added native Android methods to list, read and parse embedded profiles.
+- Added Settings UI for selecting a profile and viewing Address, DNS, MTU, Endpoint, AllowedIPs and Amnezia parameters.
+- The application reads the full embedded .conf files as requested.
+- No AmneziaWG/VPN tunnel engine was added; profiles are parsed and available to the app.
+- Kept the single universal START_SERVER.bat in PC Host.
+
 ## v0.30.0-alpha
 
 - Replaced multiple Windows host BAT files with one universal `START_SERVER.bat`.
