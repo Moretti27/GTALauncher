@@ -1,4 +1,4 @@
-# ICQ Reborn Server v0.22
+# ICQ Reborn Server v0.23
 
 ICQ Reborn uses a PC-hosted Node.js server on TCP port **22005**.
 
@@ -41,6 +41,7 @@ Important files/directories:
 - Groups and group chat.
 - File transfer up to 100 MB per file.
 - WebSocket signaling for audio/video calls.
+- Profile avatar storage in the user database.
 
 ## Network
 
