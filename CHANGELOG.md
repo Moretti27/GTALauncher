@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.25.0-alpha
+
+- Added offline cache for profile, contacts, groups and chat history.
+- Added offline queue for text messages and profile/contact/group actions.
+- App can open cached data when the PC server is temporarily unavailable.
+- Replaced permanent foreground connection with periodic background event checks.
+- Removed the permanent foreground service notification.
+- Stopped duplicate/continuous online sounds on reconnect.
+- Fixed foreground notification sound order so tray alerts do not duplicate while the app is open.
+
 ## v0.24.0-alpha
 
 - Increased profile avatar upload limit from 2 MB to 100 MB.
