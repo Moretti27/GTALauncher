@@ -46,7 +46,19 @@ public class BackgroundSyncReceiver extends BroadcastReceiver {
  static void poll(Context c)throws Exception{
   android.content.SharedPreferences p=c.getSharedPreferences("icq_reborn",Context.MODE_PRIVATE);
   String token=p.getString("token","");
-  String base=p.getString("serverUrl","http://192.168.3.3:22005");
+  String base=p.getString("resolvedServer","");
+  if(base.isEmpty()){
+   try{
+    URL cfg=new URL("https://raw.githubusercontent.com/Moretti27/ICQ-REBORN/main/server-config.json?t="+System.currentTimeMillis());
+    HttpURLConnection ch=(HttpURLConnection)cfg.openConnection();
+    ch.setConnectTimeout(6000);ch.setReadTimeout(6000);ch.setRequestMethod("GET");
+    if(ch.getResponseCode()>=200&&ch.getResponseCode()<300){
+     JSONObject o=new JSONObject(read(ch.getInputStream()));
+     base=o.optString("publicBaseUrl","");
+     if(!base.isEmpty())p.edit().putString("resolvedServer",base.replaceAll("/+$","")).apply();
+    }
+   }catch(Exception ignored){}
+  }
   if(token.isEmpty()||base.isEmpty())return;
   long since=p.getLong("lastEventPoll",System.currentTimeMillis());
   URL u=new URL(base.replaceAll("/+$","")+"/api/events?since="+since);
