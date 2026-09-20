@@ -6,7 +6,7 @@
 </style></head><body>
 <div id="authView" class="wrap auth">
 <div style="font-size:56px;text-align:center">🌼</div><h2>ICQ <span style="color:var(--green)">Reborn</span></h2>
-<div class="card"><div class="sectionTitle">Сервер</div><input id="authServer" class="f" style="width:100%"><button id="checkServer" class="primary" style="width:100%;margin-top:8px">Проверить подключение</button><div id="serverCheckState" class="state"></div></div>
+<div class="card"><div class="sectionTitle">Подключение</div><div class="notice">ICQ Reborn автоматически подключается к основному серверу.</div><div id="serverCheckState" class="state" style="margin-top:8px">Проверяю сервер…</div></div>
 <div id="loginCard" class="card"><div class="sectionTitle">Вход</div><input id="loginUin" class="f" style="width:100%" placeholder="UIN"><input id="loginPass" class="f" type="password" style="width:100%;margin-top:8px" placeholder="Пароль"><div class="row" style="margin-top:8px"><button id="loginBtn" class="primary grow">Войти</button><button id="showReg" class="grow">Регистрация</button></div><div id="authState" class="state"></div></div>
 <div id="regCard" class="card hide"><div class="sectionTitle">Регистрация нового аккаунта</div><input id="regNick" class="f" style="width:100%" placeholder="Ник"><input id="regPhone" class="f" inputmode="tel" style="width:100%;margin-top:8px" placeholder="Номер телефона"><input id="regPass" class="f" type="password" style="width:100%;margin-top:8px" placeholder="Пароль, минимум 6 символов"><input id="regPass2" class="f" type="password" style="width:100%;margin-top:8px" placeholder="Повторите пароль"><div class="notice" style="margin-top:10px">После регистрации сервер создаст постоянный UIN. Для входа на другом устройстве понадобятся UIN и пароль.</div><div class="row" style="margin-top:8px"><button id="regBtn" class="primary grow">Создать аккаунт</button><button id="showLogin">Назад ко входу</button></div><div id="regState" class="state"></div></div>
 <div id="regDoneCard" class="card hide"><div class="sectionTitle">Аккаунт создан</div><div style="text-align:center;padding:8px 0"><div class="sub">Ваш UIN</div><div id="newUin" style="font-size:34px;font-weight:900;letter-spacing:.08em;color:var(--green)">00000000</div><div class="notice" style="margin-top:10px">Сохрани этот UIN. По нему можно войти в аккаунт на другом устройстве.</div></div><div class="row"><button id="copyNewUin" class="grow">Копировать UIN</button><button id="goLogin" class="primary grow">Войти по UIN</button></div></div>
@@ -25,7 +25,7 @@
 <section id="settings" class="screen">
 <div class="card"><div class="sectionTitle">Профиль</div><div class="settingsAvatar"><div id="settingsAvatar" class="profileAvatar">?</div><div class="grow"><label class="primary" style="display:inline-block;padding:10px 12px;border-radius:14px;cursor:pointer">Галерея<input id="avatarFile" type="file" accept="image/*" hidden></label><label class="softBtn" style="display:inline-block;padding:10px 12px;border-radius:14px;cursor:pointer;margin-left:6px">Камера<input id="avatarCamera" type="file" accept="image/*" capture="user" hidden></label><button id="removeAvatar" class="softBtn" style="margin-left:6px">Удалить</button><div id="avatarState" class="state">PNG, JPG или WEBP · исходное изображение до 100 МБ</div></div></div><input id="nick" class="f" style="width:100%;margin-top:12px" placeholder="Ник"><button id="save" class="primary" style="width:100%;margin-top:8px">Сохранить профиль</button></div>
 <div class="card"><div class="sectionTitle">Телефон</div><div id="phoneSummary" class="phoneLinked"></div><input id="myPhone" class="f" inputmode="tel" style="width:100%;margin-top:8px" placeholder="Новый номер телефона"><div class="row" style="margin-top:8px"><button id="savePhone" class="primary grow">Привязать / заменить</button><button id="unlinkPhone">Отвязать</button></div></div>
-<div class="card"><div class="sectionTitle">Сервер</div><input id="serverUrl" class="f" style="width:100%"><button id="saveServer" style="width:100%;margin-top:8px">Сохранить адрес</button></div>
+<div class="card"><div class="sectionTitle">Сеть</div><div class="notice">Адрес сервера определяется автоматически. Пользователю не нужно вводить IP или порт.</div><div id="resolvedServer" class="state" style="margin-top:8px"></div></div>
 <div class="card"><button id="logout" class="danger" style="width:100%">Выйти из аккаунта</button></div>
 </section></div>
 <div class="tabs"><button class="on" data-s="contacts">Контакты</button><button data-s="groups">Группы</button><button data-s="chat">Чат</button><button data-s="calls">Звонки</button><button data-s="settings">⚙</button></div>
@@ -51,19 +51,46 @@ async function flushQueue(){let q=queueGet(),left=[];for(const a of q){try{
  else if(a.type==='phone')me=await api('/api/me',{method:'PATCH',body:JSON.stringify({phoneHashes:a.hashes})});
  else if(a.type==='avatar')me=await api('/api/me/avatar',{method:'POST',body:JSON.stringify({data:a.data})});
  }catch(_){left.push(a)}}queueSet(left);if(!left.length){try{await loadContacts();await loadGroups()}catch(_){}}}
-let base=(storeGet('serverUrl')||'http://192.168.3.3:22005').replace(/\/$/,'');
+const BOOTSTRAP_URL='https://raw.githubusercontent.com/Moretti27/ICQ-REBORN/main/server-config.json';
+const LOCAL_FALLBACK='http://192.168.3.3:22005';
+let base=(storeGet('resolvedServer')||'').replace(/\/$/,'');
+async function resolveServer(){
+ const candidates=[];
+ try{
+  const r=await fetch(BOOTSTRAP_URL+'?t='+Date.now(),{cache:'no-store'});
+  if(r.ok){
+   const c=await r.json();
+   if(c.publicBaseUrl)candidates.push(String(c.publicBaseUrl).replace(/\/$/,''));
+   if(Array.isArray(c.fallbacks))for(const x of c.fallbacks)if(x)candidates.push(String(x).replace(/\/$/,''));
+  }
+ }catch(_){}
+ if(base)candidates.push(base);
+ candidates.push(LOCAL_FALLBACK);
+ for(const u of [...new Set(candidates)]){
+  if(!/^https?:\/\//i.test(u))continue;
+  try{
+   const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),4500);
+   const r=await fetch(u+'/health',{signal:ctl.signal,cache:'no-store'});
+   clearTimeout(tm);
+   if(!r.ok)continue;
+   const d=await r.json();
+   if(d&&d.ok){base=u;storeSet('resolvedServer',base);return {ok:true,version:d.version||'',url:base}}
+  }catch(_){}
+ }
+ return {ok:false,url:''}
+}
 let token=storeGet('token')||'',me=null,contacts=[],groups=[],sel='',selGroup='',chatMode='direct',ws=null,pc=null,ls=null,rs=null,pendingCall=null,pendingIce=[],callPeer='';
 function toast(s){try{NativeBridge.toast(s)}catch(_){alert(s)}}function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function avatarHtml(u,fallback='?'){return u?.avatar?'<img src="'+u.avatar+'" alt="">':esc((u?.nick||fallback||'?')[0])}
 function setAvatarEl(el,u,fallback='?'){if(!el)return;el.innerHTML=avatarHtml(u,fallback)}
 async function imageToAvatar(file){return await new Promise((resolve,reject)=>{const img=new Image(),r=new FileReader();r.onerror=()=>reject(Error('Не удалось прочитать изображение'));r.onload=()=>{img.onload=()=>{const size=512,c=document.createElement('canvas');c.width=c.height=size;const x=c.getContext('2d');const scale=Math.max(size/img.width,size/img.height),w=img.width*scale,hh=img.height*scale;x.drawImage(img,(size-w)/2,(size-hh)/2,w,hh);resolve(c.toDataURL('image/jpeg',.86))};img.onerror=()=>reject(Error('Неверное изображение'));img.src=r.result};r.readAsDataURL(file)})}
-function authHeaders(){return token?{'Authorization':'Bearer '+token}:{}}async function api(path,opt={}){const r=await fetch(base+path,{...opt,headers:{'Content-Type':'application/json',...authHeaders(),...(opt.headers||{})}});let d={};try{d=await r.json()}catch(_){}if(!r.ok)throw Error(d.error||('HTTP '+r.status));return d}
+function authHeaders(){return token?{'Authorization':'Bearer '+token}:{}}async function api(path,opt={}){if(!base){const d=await resolveServer();if(!d.ok)throw Error('Сервер недоступен')}const r=await fetch(base+path,{...opt,headers:{'Content-Type':'application/json',...authHeaders(),...(opt.headers||{})}});let d={};try{d=await r.json()}catch(_){}if(!r.ok)throw Error(d.error||('HTTP '+r.status));return d}
 function normalizePhone(s){return String(s||'').replace(/\D/g,'')}function phoneVariants(s){let d=normalizePhone(s),a=[];if(d.length>=7)a.push(d);if(d.length>9)a.push(d.slice(-9));if(d.length>10)a.push(d.slice(-10));return [...new Set(a)]}async function sha256(s){let b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}async function phoneHashes(s){let a=[];for(const v of phoneVariants(s))a.push(await sha256(v));return a}
 function show(n){document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('on',x.id===n));document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x.dataset.s===n));if(n==='chat')loadChat();if(n==='groups')loadGroups()}document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.s));
-function showAuth(){$('authView').classList.remove('hide');$('appView').classList.add('hide');$('authServer').value=base}
-function showApp(){$('authView').classList.add('hide');$('appView').classList.remove('hide');$('serverUrl').value=base}
-async function checkServer(){base=$('authServer').value.trim().replace(/\/$/,'')||'http://192.168.3.3:22005';storeSet('serverUrl',base);try{let r=await fetch(base+'/health'),d=await r.json();if(!d.ok)throw Error();$('serverCheckState').textContent='✓ Сервер найден · v'+d.version;return true}catch(_){$('serverCheckState').textContent='✕ Сервер недоступен';return false}}
-$('checkServer').onclick=checkServer;$('showReg').onclick=()=>{$('loginCard').classList.add('hide');$('regDoneCard').classList.add('hide');$('regCard').classList.remove('hide')};$('showLogin').onclick=()=>{$('regCard').classList.add('hide');$('regDoneCard').classList.add('hide');$('loginCard').classList.remove('hide')};
+function showAuth(){$('authView').classList.remove('hide');$('appView').classList.add('hide')}
+function showApp(){$('authView').classList.add('hide');$('appView').classList.remove('hide');if($('resolvedServer'))$('resolvedServer').textContent=base?'Подключено: '+base:'Сервер не найден'}
+async function checkServer(){const d=await resolveServer();if(d.ok){$('serverCheckState').textContent='✓ Сервер доступен · v'+d.version;return true}$('serverCheckState').textContent='✕ Основной сервер пока недоступен';return false}
+$('showReg').onclick=()=>{$('loginCard').classList.add('hide');$('regDoneCard').classList.add('hide');$('regCard').classList.remove('hide')};$('showLogin').onclick=()=>{$('regCard').classList.add('hide');$('regDoneCard').classList.add('hide');$('loginCard').classList.remove('hide')};
 $('loginBtn').onclick=async()=>{try{if(!(await checkServer()))return;const uin=$('loginUin').value.replace(/\D/g,''),password=$('loginPass').value;if(uin.length!==8)throw Error('Введите 8-значный UIN');if(!password)throw Error('Введите пароль');$('authState').textContent='Выполняю вход…';let r=await api('/api/login',{method:'POST',body:JSON.stringify({uin,password})});token=r.token;storeSet('token',token);storeSet('uin',r.user.uin);$('authState').textContent='';await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}};
 $('regBtn').onclick=async()=>{try{
  if(!(await checkServer()))return;
@@ -111,7 +138,7 @@ async function sendMessage(){let text=$('msg').value.trim();if(!text)return;cons
 $('file').onchange=async e=>{let f=e.target.files?.[0];if(!f)return;if(f.size>100*1024*1024){toast('Файл максимум 100 МБ');return}try{$('sendState').textContent='Загружаю '+f.name+'…';let buf=new Uint8Array(await f.arrayBuffer()),s='',chunk=0x8000;for(let i=0;i<buf.length;i+=chunk)s+=String.fromCharCode(...buf.subarray(i,i+chunk));let meta=await api('/api/files',{method:'POST',body:JSON.stringify({name:f.name,type:f.type,data:btoa(s)})});if(chatMode==='group'&&selGroup)await api('/api/groups/'+selGroup+'/messages',{method:'POST',body:JSON.stringify({file:meta})});else if(sel)await api('/api/messages',{method:'POST',body:JSON.stringify({to:sel,file:meta})});$('sendState').textContent='Файл отправлен';await loadChat()}catch(x){$('sendState').textContent=x.message}e.target.value=''};
 
 function wsUrl(){let u=new URL(base);return(u.protocol==='https:'?'wss:':'ws:')+'//'+u.host+'/ws?token='+encodeURIComponent(token)}
-function connectWs(){try{ws?.close()}catch(_){}ws=new WebSocket(wsUrl());ws.onopen=()=>{$('serverState').textContent='online';flushQueue()};ws.onclose=()=>{$('serverState').textContent='offline';setTimeout(()=>token&&connectWs(),3000)};ws.onmessage=async ev=>{let m;try{m=JSON.parse(ev.data)}catch(_){return}if(m.type==='presence'){let i=contacts.findIndex(x=>x.uin===m.user.uin);if(i>=0){let old=contacts[i].status;contacts[i]=m.user;renderContacts();}}if(m.type==='message'){if(chatMode==='direct'&&(sel===m.message.from||sel===m.message.to))await loadChat();try{NativeBridge.notify('ICQ Reborn · '+(m.from?.nick||m.message.from),m.message.text||('Файл: '+m.message.file?.name),'message')}catch(_){}}if(m.type==='group-message'){if(chatMode==='group'&&selGroup===m.group.id)await loadChat();try{NativeBridge.notify(m.group.name,m.message.text||('Файл: '+m.message.file?.name),'message')}catch(_){}}if(m.type==='group-added')await loadGroups();if(m.type==='contact-added'){await loadContacts();try{NativeBridge.notify('ICQ Reborn','Новый контакт: '+(m.user?.nick||m.user?.uin),'auth')}catch(_){}}if(m.type==='call-signal')handleSignal(m)}}
+function connectWs(){if(!base)return;try{ws?.close()}catch(_){}ws=new WebSocket(wsUrl());ws.onopen=()=>{$('serverState').textContent='online';flushQueue()};ws.onclose=()=>{$('serverState').textContent='offline';setTimeout(()=>token&&connectWs(),3000)};ws.onmessage=async ev=>{let m;try{m=JSON.parse(ev.data)}catch(_){return}if(m.type==='presence'){let i=contacts.findIndex(x=>x.uin===m.user.uin);if(i>=0){let old=contacts[i].status;contacts[i]=m.user;renderContacts();}}if(m.type==='message'){if(chatMode==='direct'&&(sel===m.message.from||sel===m.message.to))await loadChat();try{NativeBridge.notify('ICQ Reborn · '+(m.from?.nick||m.message.from),m.message.text||('Файл: '+m.message.file?.name),'message')}catch(_){}}if(m.type==='group-message'){if(chatMode==='group'&&selGroup===m.group.id)await loadChat();try{NativeBridge.notify(m.group.name,m.message.text||('Файл: '+m.message.file?.name),'message')}catch(_){}}if(m.type==='group-added')await loadGroups();if(m.type==='contact-added'){await loadContacts();try{NativeBridge.notify('ICQ Reborn','Новый контакт: '+(m.user?.nick||m.user?.uin),'auth')}catch(_){}}if(m.type==='call-signal')handleSignal(m)}}
 function wsSend(o){if(ws?.readyState!==1)throw Error('Нет соединения с сервером');ws.send(JSON.stringify(o))}
 window.icqBackground=()=>{try{ws?.close()}catch(_){}ws=null;$('serverState').textContent='offline'};
 window.icqForeground=()=>{try{NativeBridge.bg(false)}catch(_){}if(token&&!ws)connectWs();flushQueue()};
@@ -126,10 +153,12 @@ async function handleSignal(m){try{if(m.signalType==='offer'){pendingCall=m;rend
 $('take').onclick=async()=>{try{let m=pendingCall,savedIce=[...pendingIce];$('incoming').classList.add('hide');await newPc(m.from,true);pendingIce=savedIce;await pc.setRemoteDescription(m.payload.sdp);await getMedia(m.payload.mode);await flushIce();let ans=await pc.createAnswer();await pc.setLocalDescription(ans);wsSend({type:'call-signal',to:m.from,signalType:'answer',payload:pc.localDescription});pendingCall=null;$('callState').textContent='Звонок идёт'}catch(e){$('callState').textContent='Не удалось принять: '+e.message}};
 $('reject').onclick=()=>{if(pendingCall)wsSend({type:'call-signal',to:pendingCall.from,signalType:'hang',payload:{}});$('incoming').classList.add('hide');pendingCall=null};function stopCall(){ls?.getTracks().forEach(t=>t.stop());rs?.getTracks().forEach(t=>t.stop());ls=rs=null;$('local').srcObject=$('remote').srcObject=null;try{pc?.close()}catch(_){}pc=null;pendingIce=[];callPeer='';$('callState').textContent='Нет звонка'}$('hang').onclick=()=>{if(callPeer)try{wsSend({type:'call-signal',to:callPeer,signalType:'hang',payload:{}})}catch(_){}stopCall()};$('callA').onclick=()=>startCall('audio');$('callV').onclick=()=>startCall('video');$('mute').onclick=()=>{let t=ls?.getAudioTracks()[0];if(t){t.enabled=!t.enabled;$('mute').textContent=t.enabled?'🎙️':'🔇'}};$('cam').onclick=()=>{let t=ls?.getVideoTracks()[0];if(t){t.enabled=!t.enabled;$('cam').textContent=t.enabled?'📷':'🚫'}};
 
-$('saveServer').onclick=()=>{base=$('serverUrl').value.trim().replace(/\/$/,'');storeSet('serverUrl',base);connectWs();toast('Адрес сохранён')};$('logout').onclick=()=>{token='';storeRemove('token');storeRemove('uin');try{ws?.close()}catch(_){}showAuth()};
+$('logout').onclick=()=>{token='';storeRemove('token');storeRemove('uin');try{ws?.close()}catch(_){}showAuth()};
 (async()=>{
-  $('authServer').value=base;$('serverUrl').value=base;
-  if(!token){showAuth();$('loginUin').value=storeGet('uin')||storeGet('lastRegisteredUin')||'';return}
+  const resolved=await resolveServer();
+  showAuth();
+  $('serverCheckState').textContent=resolved.ok?'✓ Сервер доступен · v'+resolved.version:'✕ Основной сервер пока недоступен';
+  if(!token){$('loginUin').value=storeGet('uin')||storeGet('lastRegisteredUin')||'';return}
   try{
     const r=await fetch(base+'/api/me',{headers:{'Authorization':'Bearer '+token}});
     if(r.status===401){token='';storeRemove('token');storeRemove('uin');showAuth();return}
