@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.29.0-alpha
+
+- Fixed false "main server unavailable" status in Android.
+- Server health checks now use native Android HttpURLConnection first, with WebView fetch only as fallback.
+- Added automatic reconnect after Wi-Fi/mobile-network changes.
+- Added progressive WebSocket reconnect retry instead of a fixed reconnect loop.
+- Fixed PC Host LAN address selection to prefer the HUAWEI AX3 network 192.168.3.x.
+- Kept direct public endpoint 31.135.108.120:22005 and central server-config discovery.
+
 ## v0.28.0-alpha
 
 - Removed Cloudflare Tunnel from the normal deployment path.
