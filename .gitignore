@@ -1,0 +1,19 @@
+# Android / Gradle
+.gradle/
+**/build/
+local.properties
+*.iml
+.idea/
+
+# Node
+server/node_modules/
+npm-debug.log*
+
+# Runtime server data and secrets
+server/data/
+!server/data/.gitkeep
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
