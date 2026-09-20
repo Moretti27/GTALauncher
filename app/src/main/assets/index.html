@@ -105,8 +105,12 @@ async function webHealth(u,timeout=2000){
 async function probeServer(u){
  const nativeP=nativeHealthAsync(u).then(raw=>{try{const d=raw?JSON.parse(raw):null;return d&&d.ok?d:null}catch(_){return null}});
  const webP=webHealth(u);
- const [n,w]=await Promise.all([nativeP,webP]);
- return n||w||null;
+ return new Promise(resolve=>{
+  let left=2,done=false;
+  const take=d=>{if(done)return;if(d){done=true;resolve(d);return}if(--left===0)resolve(null)};
+  nativeP.then(take).catch(()=>take(null));
+  webP.then(take).catch(()=>take(null));
+ });
 }
 function firstHealthy(candidates){
  const list=[...new Set(candidates.filter(u=>/^https?:\/\//i.test(u)))];
