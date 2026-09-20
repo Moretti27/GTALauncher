@@ -8,9 +8,14 @@ const jwt=require('jsonwebtoken');
 const crypto=require('crypto');
 const {WebSocketServer}=require('ws');
 
-const SUPPORT_WALLET=process.env.SUPPORT_WALLET||'';
-const SUPPORT_CARD=process.env.SUPPORT_CARD||'';
-const VIP_MIN_AMOUNT=Number(process.env.VIP_MIN_AMOUNT||1);
+const SUPPORT_FILE=path.join(__dirname,'data','support.json');
+function supportConfig(){
+  try{return JSON.parse(fs.readFileSync(SUPPORT_FILE,'utf8'))}catch(_){return {}}
+}
+const SUPPORT_CFG=supportConfig();
+const SUPPORT_WALLET=process.env.SUPPORT_WALLET||String(SUPPORT_CFG.wallet||'');
+const SUPPORT_CARD=process.env.SUPPORT_CARD||String(SUPPORT_CFG.card||'');
+const VIP_MIN_AMOUNT=Number(process.env.VIP_MIN_AMOUNT||SUPPORT_CFG.vipMinAmount||1);
 const YM_SECRET_FILE=path.join(__dirname,'data','yoomoney_notification_secret.txt');
 function yoomoneySecret(){
   if(process.env.YOOMONEY_NOTIFICATION_SECRET)return process.env.YOOMONEY_NOTIFICATION_SECRET;
