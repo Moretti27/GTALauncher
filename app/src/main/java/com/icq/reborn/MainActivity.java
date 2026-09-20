@@ -163,6 +163,7 @@ public class MainActivity extends Activity{
 
   @JavascriptInterface public void copy(String t){runOnUiThread(()->{((android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("ICQ Reborn",t));Toast.makeText(MainActivity.this,"Скопировано",Toast.LENGTH_SHORT).show();});}
   @JavascriptInterface public void share(String t){runOnUiThread(()->{Intent i=new Intent(Intent.ACTION_SEND);i.setType("text/plain");i.putExtra(Intent.EXTRA_TEXT,t);startActivity(Intent.createChooser(i,"Поделиться"));});}
+  @JavascriptInterface public void openExternal(String url){runOnUiThread(()->{try{Uri u=Uri.parse(url);String s=u.getScheme();if("http".equalsIgnoreCase(s)||"https".equalsIgnoreCase(s))startActivity(new Intent(Intent.ACTION_VIEW,u));}catch(Exception e){}});}
   @JavascriptInterface public void toast(String t){runOnUiThread(()->Toast.makeText(MainActivity.this,t,Toast.LENGTH_SHORT).show());}
   @JavascriptInterface public void bg(boolean on){runOnUiThread(()->{if(on)BackgroundSyncReceiver.schedule(MainActivity.this,true);else BackgroundSyncReceiver.cancel(MainActivity.this);});}
   @JavascriptInterface public boolean isForeground(){return appForeground;}
