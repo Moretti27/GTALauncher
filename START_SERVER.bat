@@ -91,7 +91,7 @@ echo Keep the server\data folder when updating the Host.
 echo.
 echo YooMoney VIP webhook after server starts:
 echo http://31.135.108.120:22005/api/support/yoomoney
-echo The notification secret is printed by the server below.
+echo The notification secret is printed locally by the server below.
 echo Configure HTTP notifications in YooMoney once for automatic VIP.
 echo Close this window to stop the server.
 echo.
