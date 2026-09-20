@@ -12,10 +12,10 @@
 #calls .callStatus{font-size:11px;margin-top:3px;min-height:15px}
 #calls .callControls{margin-top:10px;gap:7px;flex-wrap:nowrap}
 #calls .callRound{width:42px;height:42px;min-width:42px;font-size:13px;border-radius:14px;padding:0 9px}#calls #callV,#calls #cam{width:auto;min-width:64px}#local{-webkit-transform:none!important;transform:none!important}
-#calls .videos{display:none!important;width:100%;margin-top:10px!important;grid-template-columns:1fr;gap:7px}
-#calls .callHero.videoActive .videos{display:grid!important}
-#calls .videos video{min-height:0;height:auto;max-height:260px;aspect-ratio:16/10;object-fit:cover;border-radius:14px;border:1px solid #203b27;background:#020503}
-#calls #local{max-height:130px;aspect-ratio:16/9}
+#calls .videos{display:none!important;position:relative;width:100%;height:min(58vh,440px);margin-top:10px!important;border-radius:14px;overflow:hidden;background:#000;border:1px solid #203b27}
+#calls .callHero.videoActive .videos{display:block!important}
+#calls #remote{display:block;width:100%;height:100%;min-height:0;max-height:none;object-fit:contain!important;object-position:center;background:#000;border:0;border-radius:0;-webkit-transform:scaleX(1)!important;transform:scaleX(1)!important}
+#calls #local{position:absolute;right:9px;top:9px;width:28%;max-width:124px;height:32%;min-height:92px;max-height:150px;object-fit:contain!important;object-position:center;background:#050805;border:1px solid #47604c;border-radius:12px;z-index:2;-webkit-transform:scaleX(1)!important;transform:scaleX(1)!important}
 #calls .incomingCard{padding:12px;border-radius:18px}
 #calls .incomingCard .callAvatar{width:52px;height:52px}
 #calls .incomingCard .callName{font-size:17px;margin-top:8px}
@@ -24,8 +24,8 @@
  #calls .callHero{padding:10px}
  #calls .callAvatar{width:54px;height:54px}
  #calls .callRound{width:40px;height:40px;min-width:40px}
- #calls .videos video{max-height:220px}
- #calls #local{max-height:110px}
+ #calls .videos{height:min(54vh,390px)}
+ #calls #local{width:30%;max-width:108px;min-height:82px;max-height:128px}
 }
 </style></head><body>
 <div id="authView" class="wrap auth">
@@ -163,6 +163,8 @@ async function imageToAvatar(file){return await new Promise((resolve,reject)=>{c
 function authHeaders(){return token?{'Authorization':'Bearer '+token}:{}}async function api(path,opt={}){if(!base){const d=await resolveServer();if(!d.ok)throw Error('Сервер недоступен')}const r=await fetch(base+path,{...opt,headers:{'Content-Type':'application/json',...authHeaders(),...(opt.headers||{})}});let d={};try{d=await r.json()}catch(_){}if(!r.ok)throw Error(d.error||('HTTP '+r.status));return d}
 function normalizePhone(s){return String(s||'').replace(/\D/g,'')}function phoneVariants(s){let d=normalizePhone(s),a=[];if(d.length>=7)a.push(d);if(d.length>9)a.push(d.slice(-9));if(d.length>10)a.push(d.slice(-10));return [...new Set(a)]}async function sha256(s){let b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}async function phoneHashes(s){let a=[];for(const v of phoneVariants(s))a.push(await sha256(v));return a}
 function show(n){
+ if(['contacts','groups','chat','calls','settings'].includes(n))storeSet('lastScreen',n);
+ if(chatMode)storeSet('lastChatMode',chatMode);if(sel)storeSet('lastSel',sel);else storeRemove('lastSel');if(selGroup)storeSet('lastSelGroup',selGroup);else storeRemove('lastSelGroup');
  document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('on',x.id===n));
  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x.dataset.s===n));
  const callScreen=$('calls');if(callScreen){callScreen.classList.toggle('keepMedia',!!pc&&n!=='calls');if(n==='calls'){callScreen.classList.remove('keepMedia');setTimeout(syncCallMedia,0)}}
@@ -236,10 +238,22 @@ $('regBtn').onclick=async()=>{try{
 }catch(e){$('regState').textContent=e.message}};
 $('copyNewUin').onclick=()=>{const u=$('newUin').textContent;try{NativeBridge.copy(u)}catch(_){navigator.clipboard?.writeText(u)}};
 $('goLogin').onclick=()=>{$('regDoneCard').classList.add('hide');$('loginCard').classList.remove('hide');$('loginUin').value=storeGet('lastRegisteredUin')||$('newUin').textContent;$('authState').textContent='Введите пароль от созданного аккаунта'};
-async function afterAuth(u){me=u;cacheSet('me',me);showApp();renderMe();await Promise.all([loadContacts(),loadGroups()]);connectWs();try{NativeBridge.bg(false);NativeBridge.play('startup')}catch(_){}}
+async function afterAuth(u){
+ me=u;cacheSet('me',me);showApp();renderMe();
+ await Promise.all([loadContacts(),loadGroups()]);
+ chatMode=storeGet('lastChatMode')||'direct';
+ sel=storeGet('lastSel')||'';
+ selGroup=storeGet('lastSelGroup')||'';
+ if(chatMode==='direct'&&sel&&!contacts.some(x=>x.uin===sel))sel='';
+ if(chatMode==='group'&&selGroup&&!groups.some(x=>x.id===selGroup))selGroup='';
+ connectWs();
+ const last=storeGet('lastScreen')||'contacts';
+ show(last==='chat'&&!(sel||selGroup)?'contacts':last);
+ try{NativeBridge.bg(false);NativeBridge.play('startup')}catch(_){}
+}
 function renderMe(){if(me)cacheSet('me',me);$('uin').textContent=me.uin;$('meName').textContent=me.nick;if($('meBadges'))$('meBadges').innerHTML=roleBadges(me);setAvatarEl($('meAvatar'),me);setAvatarEl($('settingsAvatar'),me);$('head').innerHTML=esc(me.nick)+' · '+esc(me.status)+(me.vip?' <span class="vipBadge">VIP</span>':'');$('status').value=me.status||'ONLINE';$('nick').value=me.nick;$('myPhone').value='';$('phoneSummary').textContent=me.phoneLinked?'Номер привязан. Для замены введи новый номер ниже.':'Номер не привязан.'}
 async function loadContacts(){try{contacts=await api('/api/contacts');cacheSet('contacts',contacts)}catch(_){contacts=cacheGet('contacts',[])}renderContacts();renderMemberChips()}
-function renderContacts(){let e=$('list');e.innerHTML='';if(!contacts.length)e.innerHTML='<div class="state">Контактов пока нет.</div>';for(const c of contacts){let d=document.createElement('div');d.className='contact '+c.status;d.innerHTML='<div class="avatar">'+avatarHtml(c)+'</div><div class="grow"><b>'+esc(c.nick)+(c.vip?' <span class="vipBadge">VIP</span>':'')+roleBadges(c)+'</b><div class="state"><span class="dot"></span>'+esc(c.status)+' · '+esc(c.uin)+'</div></div><div class="contactActions"><button class="miniBtn msgBtn">💬 Сообщение</button><button class="miniBtn callBtn">📞 Позвонить</button></div>';d.querySelector('.msgBtn').onclick=()=>{chatMode='direct';sel=c.uin;selGroup='';show('chat')};d.querySelector('.callBtn').onclick=()=>{chatMode='direct';sel=c.uin;selGroup='';startCall('audio')};e.appendChild(d)}}
+function renderContacts(){let e=$('list');e.innerHTML='';if(!contacts.length)e.innerHTML='<div class="state">Контактов пока нет.</div>';for(const c of contacts){let d=document.createElement('div');d.className='contact '+c.status;d.innerHTML='<div class="avatar">'+avatarHtml(c)+'</div><div class="grow"><b>'+esc(c.nick)+(c.vip?' <span class="vipBadge">VIP</span>':'')+roleBadges(c)+'</b><div class="state"><span class="dot"></span>'+esc(c.status)+' · '+esc(c.uin)+'</div></div><div class="contactActions"><button class="miniBtn msgBtn">💬 Сообщение</button><button class="miniBtn callBtn">📞 Позвонить</button></div>';d.querySelector('.msgBtn').onclick=()=>{chatMode='direct';sel=c.uin;selGroup='';storeSet('lastChatMode','direct');storeSet('lastSel',sel);storeRemove('lastSelGroup');show('chat')};d.querySelector('.callBtn').onclick=()=>{chatMode='direct';sel=c.uin;selGroup='';storeSet('lastChatMode','direct');storeSet('lastSel',sel);storeRemove('lastSelGroup');startCall('audio')};e.appendChild(d)}}
 function renderMemberChips(){let e=$('memberChips');e.innerHTML='';for(const c of contacts){let l=document.createElement('label');l.className='chip';l.innerHTML='<input type="checkbox" value="'+esc(c.uin)+'"> '+esc(c.nick);e.appendChild(l)}}
 $('status').onchange=async()=>{const v=$('status').value;me={...me,status:v};renderMe();try{me=await api('/api/me',{method:'PATCH',body:JSON.stringify({status:v})});renderMe()}catch(_){queuePush({type:'status',value:v});$('serverState').textContent='offline'}};
 $('save').onclick=async()=>{const v=$('nick').value.trim();if(!v)return;me={...me,nick:v};renderMe();try{me=await api('/api/me',{method:'PATCH',body:JSON.stringify({nick:v})});renderMe()}catch(_){queuePush({type:'nick',value:v});toast('Сохранено на телефоне, синхронизируется позже')}};
@@ -274,7 +288,7 @@ let reconnectTimer=null,reconnectDelay=1500;
 async function reconnectNow(){clearTimeout(reconnectTimer);reconnectTimer=null;const r=await resolveServer();if(!r.ok){$('serverState').textContent='offline';reconnectTimer=setTimeout(reconnectNow,Math.min(reconnectDelay*=1.6,15000));return}if(token)connectWs()}
 function connectWs(){if(!base||!token)return;try{if(ws){ws.onclose=null;ws.close()}}catch(_){}ws=new WebSocket(wsUrl());ws.onopen=()=>{reconnectDelay=1500;$('serverState').textContent='online';flushQueue()};ws.onclose=()=>{ws=null;$('serverState').textContent='offline';clearTimeout(reconnectTimer);reconnectTimer=setTimeout(reconnectNow,reconnectDelay);reconnectDelay=Math.min(reconnectDelay*1.6,15000)};ws.onmessage=async ev=>{let m;try{m=JSON.parse(ev.data)}catch(_){return}if(m.type==='presence'){let i=contacts.findIndex(x=>x.uin===m.user.uin);if(i>=0){let old=contacts[i].status;contacts[i]=m.user;renderContacts();}}if(m.type==='message'){if(chatMode==='direct'&&(sel===m.message.from||sel===m.message.to))await loadChat();try{NativeBridge.notify('ICQ Reborn · '+(m.from?.nick||m.message.from),m.message.text||('Файл: '+m.message.file?.name),'message')}catch(_){}}if(m.type==='group-message'){if(chatMode==='group'&&selGroup===m.group.id)await loadChat();try{NativeBridge.notify(m.group.name,m.message.text||('Файл: '+m.message.file?.name),'message')}catch(_){}}if(m.type==='group-added')await loadGroups();if(m.type==='group-invite'){await loadGroupInvites();try{NativeBridge.notify('ICQ Reborn','Приглашение в группу: '+(m.group?.name||''),'auth')}catch(_){}}if(m.type==='group-member-added')await loadGroups();if(m.type==='vip-granted'){me={...me,vip:true};renderMe();loadSupportStatus();try{NativeBridge.notify('ICQ Reborn','VIP активирован. Спасибо за поддержку!','auth')}catch(_){}}if(m.type==='contact-added'){await loadContacts();try{NativeBridge.notify('ICQ Reborn','Новый контакт: '+(m.user?.nick||m.user?.uin),'auth')}catch(_){}}if(m.type==='call-signal')handleSignal(m)}}
 function wsSend(o){if(ws?.readyState!==1)throw Error('Нет соединения с сервером');ws.send(JSON.stringify(o))}
-window.icqBackground=()=>{try{ws?.close()}catch(_){}ws=null;$('serverState').textContent='offline'};
+window.icqBackground=()=>{if(me)cacheSet('me',me);storeSet('lastChatMode',chatMode||'direct');if(sel)storeSet('lastSel',sel);if(selGroup)storeSet('lastSelGroup',selGroup);try{ws?.close()}catch(_){}ws=null;$('serverState').textContent='offline'};
 window.icqForeground=()=>{try{NativeBridge.bg(false)}catch(_){}if(token)reconnectNow();flushQueue();if(pc)setTimeout(syncCallMedia,80)};
 window.addEventListener('online',()=>{if(token)reconnectNow()});
 window.addEventListener('offline',()=>{$('serverState').textContent='offline';try{ws?.close()}catch(_){}ws=null});
@@ -318,7 +332,7 @@ $('supportBtn').onclick=async()=>{
   toast('Открыта страница поддержки. VIP включится после подтверждения перевода.');
  }catch(e){toast(e.message)}
 };
-$('logout').onclick=()=>{token='';storeRemove('token');if(storeGet('rememberLogin')!=='1')storeRemove('uin');try{ws?.close()}catch(_){}showAuth()};
+$('logout').onclick=()=>{token='';storeRemove('token');storeRemove('lastScreen');storeRemove('lastSel');storeRemove('lastSelGroup');storeRemove('lastChatMode');if(storeGet('rememberLogin')!=='1')storeRemove('uin');try{ws?.close()}catch(_){}showAuth()};
 (async()=>{
   const resolved=await resolveServer();
   showAuth();
