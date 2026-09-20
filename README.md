@@ -2,7 +2,7 @@
 
 ICQ Reborn is an experimental Android messenger inspired by the feel of classic instant messengers, with its own PC-hosted backend.
 
-Current development version: **v0.29.0-alpha**
+Current development version: **v0.30.0-alpha**
 
 ## What is included
 
@@ -82,15 +82,15 @@ It contains:
 
 Deleting `server/data/server_secret.txt` invalidates existing saved login sessions.
 
-## Current v0.29 changes
+## Current v0.30 changes
 
-- Fixed false Android "server unavailable" reports.
-- Server health probing now runs through native Android networking first.
-- Added automatic reconnect when switching between Wi-Fi and mobile data.
-- Improved WebSocket reconnect backoff.
-- PC Host now prefers the real HUAWEI AX3 LAN address in the 192.168.3.x subnet.
+- PC Host now has one universal `START_SERVER.bat`.
+- Removed separate network-setup and connection-check BAT files.
+- The launcher handles first-run Firewall setup automatically.
+- The launcher checks Node.js, installs missing server dependencies and detects the correct LAN IPv4 address.
 - Direct public endpoint remains `http://31.135.108.120:22005`.
-- All account/UIN, offline cache, notifications, groups, files, avatars and calling features remain.
+- Android users still do not enter a server IP or port.
+- All v0.29 Android connectivity fixes remain.
 
 ## Development status
 
