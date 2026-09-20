@@ -11,6 +11,7 @@ import android.provider.ContactsContract;
 import android.webkit.*;
 import android.widget.Toast;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import java.util.*;
 import java.net.*;
 import java.io.*;
@@ -181,5 +182,40 @@ public class MainActivity extends Activity{
   @JavascriptInterface public boolean hasContactsPermission(){return ok(Manifest.permission.READ_CONTACTS);}
   @JavascriptInterface public void requestContacts(){runOnUiThread(()->{if(Build.VERSION.SDK_INT>=23&&!ok(Manifest.permission.READ_CONTACTS))requestPermissions(new String[]{Manifest.permission.READ_CONTACTS},CONTACTS_REQ);});}
   @JavascriptInterface public String contacts(){return phoneNumbers();}
+  @JavascriptInterface public String listAmneziaProfiles(){
+   JSONArray a=new JSONArray();
+   try{
+    String[] files=getAssets().list("amnezia");
+    if(files!=null){Arrays.sort(files);for(String f:files)if(f.toLowerCase(Locale.ROOT).endsWith(".conf"))a.put(f);}
+   }catch(Exception e){}
+   return a.toString();
+  }
+  @JavascriptInterface public String readAmneziaProfile(String name){
+   try{
+    if(name==null||!name.matches("[A-Za-z0-9_.-]+\\.conf"))return "";
+    InputStream in=getAssets().open("amnezia/"+name);
+    ByteArrayOutputStream b=new ByteArrayOutputStream();byte[] x=new byte[8192];int n;
+    while((n=in.read(x))>0)b.write(x,0,n);in.close();
+    return b.toString(StandardCharsets.UTF_8.name());
+   }catch(Exception e){return "";}
+  }
+  @JavascriptInterface public String parseAmneziaProfile(String name){
+   try{
+    String raw=readAmneziaProfile(name);if(raw.isEmpty())return "{}";
+    JSONObject root=new JSONObject(),iface=new JSONObject(),peer=new JSONObject();
+    root.put("name",name);String section="";
+    for(String line:raw.split("\\r?\\n")){
+     String t=line.trim();if(t.isEmpty()||t.startsWith("#")||t.startsWith(";"))continue;
+     if(t.startsWith("[")&&t.endsWith("]")){section=t.substring(1,t.length()-1);continue;}
+     int p=t.indexOf('=');if(p<1)continue;
+     String k=t.substring(0,p).trim(),v=t.substring(p+1).trim();
+     JSONObject dst="Peer".equalsIgnoreCase(section)?peer:iface;
+     dst.put(k,v);
+    }
+    root.put("interface",iface);root.put("peer",peer);
+    root.put("hasPrivateKey",iface.has("PrivateKey"));
+    return root.toString();
+   }catch(Exception e){return "{}";}
+  }
  }
 }
