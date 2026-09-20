@@ -79,7 +79,19 @@ public class MainActivity extends Activity{
  }
  protected void onActivityResult(int r,int c,Intent d){super.onActivityResult(r,c,d);if(r==FILE&&fileCb!=null){fileCb.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(c,d));fileCb=null;}}
 
+ void playAsset(String asset){
+  try{
+   android.content.res.AssetFileDescriptor fd=getAssets().openFd(asset);
+   MediaPlayer mp=new MediaPlayer();
+   mp.setDataSource(fd.getFileDescriptor(),fd.getStartOffset(),fd.getLength());
+   fd.close();
+   mp.setOnCompletionListener(x->{try{x.release();}catch(Exception e){}});
+   mp.prepare();mp.start();
+  }catch(Exception e){}
+ }
  void playRetro(String kind){
+  if("auth".equals(kind)){playAsset("sounds/friend_add.mp3");return;}
+  if("message".equals(kind)){playAsset("sounds/message.mp3");return;}
   new Thread(()->{
    try{
     double[][] seq;
