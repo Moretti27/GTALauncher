@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.32.0-alpha
+
+- Added real group invitations: selected users receive an invite and join only after accepting.
+- Added accept/decline UI for incoming group invitations.
+- Added invite-more action for existing groups.
+- Added quick contact actions for message and audio call.
+- Added audio/video call buttons in direct-chat header.
+- Kept WebRTC media rendering alive when moving from the call screen to chat to prevent camera/video freezing.
+- Explicitly disabled local-video mirroring.
+- Made the call screen significantly more compact.
+- Added server-controlled Owner / Developer badges for UIN 54151973.
+- Added supporter VIP status.
+- Added YooMoney support orders with unique labels and signed HTTP-notification verification.
+- VIP is granted only after a valid confirmed YooMoney notification.
+- Supports payment from YooMoney or a bank card through the YooMoney payment form.
+- PC Host still uses one universal START_SERVER.bat.
+- Android and server versions synchronized to v0.32.
+
 ## v0.31.0-alpha
 
 - Embedded nine user-provided AmneziaWG/WARP .conf profiles in the Android APK.
