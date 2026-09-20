@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-title ICQ Reborn Server v0.25
+title ICQ Reborn Server v0.26
 cd /d "%~dp0server"
 
 where node >nul 2>nul
@@ -21,7 +21,7 @@ set PORT=22005
 
 echo.
 echo ================================
-echo   ICQ Reborn Server v0.25
+echo   ICQ Reborn Server v0.26
 echo ================================
 echo Port: 22005
 echo Local: http://localhost:22005
