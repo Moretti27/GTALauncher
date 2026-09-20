@@ -149,6 +149,10 @@ public class MainActivity extends Activity{
  }
 
  public class Bridge{
+  @JavascriptInterface public String prefGet(String key){return getSharedPreferences("icq_reborn",MODE_PRIVATE).getString(key,"");}
+  @JavascriptInterface public void prefSet(String key,String value){getSharedPreferences("icq_reborn",MODE_PRIVATE).edit().putString(key,value==null?"":value).apply();}
+  @JavascriptInterface public void prefRemove(String key){getSharedPreferences("icq_reborn",MODE_PRIVATE).edit().remove(key).apply();}
+
   @JavascriptInterface public void copy(String t){runOnUiThread(()->{((android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("ICQ Reborn",t));Toast.makeText(MainActivity.this,"Скопировано",Toast.LENGTH_SHORT).show();});}
   @JavascriptInterface public void share(String t){runOnUiThread(()->{Intent i=new Intent(Intent.ACTION_SEND);i.setType("text/plain");i.putExtra(Intent.EXTRA_TEXT,t);startActivity(Intent.createChooser(i,"Поделиться"));});}
   @JavascriptInterface public void toast(String t){runOnUiThread(()->Toast.makeText(MainActivity.this,t,Toast.LENGTH_SHORT).show());}

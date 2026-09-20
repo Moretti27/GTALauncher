@@ -9,7 +9,16 @@ const crypto=require('crypto');
 const {WebSocketServer}=require('ws');
 
 const PORT=Number(process.env.PORT||22005);
-const JWT_SECRET=process.env.JWT_SECRET||'CHANGE_ME_ICQ_REBORN_SECRET';
+const SECRET_FILE=path.join(__dirname,'data','server_secret.txt');
+function persistentSecret(){
+  if(process.env.JWT_SECRET)return process.env.JWT_SECRET;
+  try{const s=fs.readFileSync(SECRET_FILE,'utf8').trim();if(s.length>=32)return s}catch(_){}
+  const s=crypto.randomBytes(48).toString('hex');
+  fs.mkdirSync(path.dirname(SECRET_FILE),{recursive:true});
+  fs.writeFileSync(SECRET_FILE,s,'utf8');
+  return s;
+}
+const JWT_SECRET=persistentSecret();
 const DATA_DIR=path.join(__dirname,'data');
 const DB_FILE=path.join(DATA_DIR,'db.json');
 const FILE_DIR=path.join(DATA_DIR,'files');
@@ -29,7 +38,7 @@ function visibleStatus(u,viewer){
   return s;
 }
 function publicUser(u,viewer){return {uin:u.uin,nick:u.nick,status:visibleStatus(u,viewer),phoneLinked:Array.isArray(u.phoneHashes)&&u.phoneHashes.length>0}}
-function sign(u){return jwt.sign({uin:u.uin},JWT_SECRET,{expiresIn:'30d'})}
+function sign(u){return jwt.sign({uin:u.uin},JWT_SECRET,{expiresIn:'3650d'})}
 function auth(req,res,next){try{const h=req.headers.authorization||'',t=h.startsWith('Bearer ')?h.slice(7):String(req.query.token||''),p=jwt.verify(t,JWT_SECRET),u=db.users.find(x=>x.uin===p.uin);if(!u)return res.status(401).json({error:'Пользователь не найден'});req.user=u;next()}catch(_){res.status(401).json({error:'Нужен вход'})}}
 function emitTo(uin,obj){const ws=online.get(uin);if(ws&&ws.readyState===1)ws.send(JSON.stringify(obj))}
 function broadcastPresence(uin){const u=db.users.find(x=>x.uin===uin);if(!u)return;for(const [viewer,ws] of online){if(ws.readyState===1)ws.send(JSON.stringify({type:'presence',user:publicUser(u,viewer)}))}}
@@ -37,7 +46,7 @@ function groupFor(id,user){return db.groups.find(g=>g.id===id&&g.members.include
 function safeName(n){return String(n||'file').replace(/[\\/:*?"<>|]/g,'_').slice(0,120)}
 
 const app=express();app.use(cors());app.use(express.json({limit:'140mb'}));
-app.get('/health',(req,res)=>res.json({ok:true,name:'ICQ Reborn Server',version:'0.20.0'}));
+app.get('/health',(req,res)=>res.json({ok:true,name:'ICQ Reborn Server',version:'0.21.0'}));
 app.post('/api/register',async(req,res)=>{try{const nick=String(req.body.nick||'').trim().slice(0,32),password=String(req.body.password||'');if(nick.length<2)return res.status(400).json({error:'Ник минимум 2 символа'});if(password.length<6)return res.status(400).json({error:'Пароль минимум 6 символов'});const uin=makeUin(),passwordHash=await bcrypt.hash(password,10),phoneHashes=Array.isArray(req.body.phoneHashes)?req.body.phoneHashes.filter(x=>/^[a-f0-9]{64}$/i.test(String(x))).slice(0,6):[];const user={uin,nick,passwordHash,phoneHashes,status:'ONLINE',createdAt:Date.now()};db.users.push(user);db.contacts[uin]=[];save();res.json({token:sign(user),user:publicUser(user,uin)})}catch(e){res.status(500).json({error:e.message})}});
 app.post('/api/login',async(req,res)=>{const u=db.users.find(x=>x.uin===String(req.body.uin||'').trim());if(!u||!(await bcrypt.compare(String(req.body.password||''),u.passwordHash)))return res.status(401).json({error:'Неверный UIN или пароль'});res.json({token:sign(u),user:publicUser(u,u.uin)})});
 app.get('/api/me',auth,(req,res)=>res.json(publicUser(req.user,req.user.uin)));
