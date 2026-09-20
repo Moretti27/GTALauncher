@@ -55,6 +55,19 @@ const BOOTSTRAP_URL='https://raw.githubusercontent.com/Moretti27/ICQ-REBORN/main
 const PUBLIC_FALLBACK='http://31.135.108.120:22005';
 const LOCAL_FALLBACK='http://192.168.3.3:22005';
 let base=(storeGet('resolvedServer')||'').replace(/\/$/,'');
+async function probeServer(u){
+ try{
+  if(typeof NativeBridge!=='undefined'&&NativeBridge.health){
+   const raw=NativeBridge.health(u);
+   if(raw){const d=JSON.parse(raw);if(d&&d.ok)return d}
+  }
+ }catch(_){}
+ try{
+  const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),4500);
+  const r=await fetch(u+'/health',{signal:ctl.signal,cache:'no-store'});
+  clearTimeout(tm);if(!r.ok)return null;const d=await r.json();return d&&d.ok?d:null;
+ }catch(_){return null}
+}
 async function resolveServer(){
  const candidates=[];
  try{
@@ -70,14 +83,8 @@ async function resolveServer(){
  candidates.push(LOCAL_FALLBACK);
  for(const u of [...new Set(candidates)]){
   if(!/^https?:\/\//i.test(u))continue;
-  try{
-   const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),4500);
-   const r=await fetch(u+'/health',{signal:ctl.signal,cache:'no-store'});
-   clearTimeout(tm);
-   if(!r.ok)continue;
-   const d=await r.json();
-   if(d&&d.ok){base=u;storeSet('resolvedServer',base);return {ok:true,version:d.version||'',url:base}}
-  }catch(_){}
+  const d=await probeServer(u);
+  if(d){base=u;storeSet('resolvedServer',base);return {ok:true,version:d.version||'',url:base}}
  }
  return {ok:false,url:''}
 }
@@ -91,7 +98,7 @@ function normalizePhone(s){return String(s||'').replace(/\D/g,'')}function phone
 function show(n){document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('on',x.id===n));document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x.dataset.s===n));if(n==='chat')loadChat();if(n==='groups')loadGroups()}document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.s));
 function showAuth(){$('authView').classList.remove('hide');$('appView').classList.add('hide')}
 function showApp(){$('authView').classList.add('hide');$('appView').classList.remove('hide');if($('resolvedServer'))$('resolvedServer').textContent=base?'Подключено: '+base:'Сервер не найден'}
-async function checkServer(){const d=await resolveServer();if(d.ok){$('serverCheckState').textContent='✓ Сервер доступен · v'+d.version;return true}$('serverCheckState').textContent='✕ Основной сервер пока недоступен';return false}
+async function checkServer(){const d=await resolveServer();if(d.ok){$('serverCheckState').textContent='✓ Сервер доступен · v'+d.version;return true}$('serverCheckState').textContent='✕ Нет соединения с сервером';return false}
 $('showReg').onclick=()=>{$('loginCard').classList.add('hide');$('regDoneCard').classList.add('hide');$('regCard').classList.remove('hide')};$('showLogin').onclick=()=>{$('regCard').classList.add('hide');$('regDoneCard').classList.add('hide');$('loginCard').classList.remove('hide')};
 $('loginBtn').onclick=async()=>{try{if(!(await checkServer()))return;const uin=$('loginUin').value.replace(/\D/g,''),password=$('loginPass').value;if(uin.length!==8)throw Error('Введите 8-значный UIN');if(!password)throw Error('Введите пароль');$('authState').textContent='Выполняю вход…';let r=await api('/api/login',{method:'POST',body:JSON.stringify({uin,password})});token=r.token;storeSet('token',token);storeSet('uin',r.user.uin);$('authState').textContent='';await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}};
 $('regBtn').onclick=async()=>{try{
@@ -140,10 +147,14 @@ async function sendMessage(){let text=$('msg').value.trim();if(!text)return;cons
 $('file').onchange=async e=>{let f=e.target.files?.[0];if(!f)return;if(f.size>100*1024*1024){toast('Файл максимум 100 МБ');return}try{$('sendState').textContent='Загружаю '+f.name+'…';let buf=new Uint8Array(await f.arrayBuffer()),s='',chunk=0x8000;for(let i=0;i<buf.length;i+=chunk)s+=String.fromCharCode(...buf.subarray(i,i+chunk));let meta=await api('/api/files',{method:'POST',body:JSON.stringify({name:f.name,type:f.type,data:btoa(s)})});if(chatMode==='group'&&selGroup)await api('/api/groups/'+selGroup+'/messages',{method:'POST',body:JSON.stringify({file:meta})});else if(sel)await api('/api/messages',{method:'POST',body:JSON.stringify({to:sel,file:meta})});$('sendState').textContent='Файл отправлен';await loadChat()}catch(x){$('sendState').textContent=x.message}e.target.value=''};
 
 function wsUrl(){let u=new URL(base);return(u.protocol==='https:'?'wss:':'ws:')+'//'+u.host+'/ws?token='+encodeURIComponent(token)}
-function connectWs(){if(!base)return;try{ws?.close()}catch(_){}ws=new WebSocket(wsUrl());ws.onopen=()=>{$('serverState').textContent='online';flushQueue()};ws.onclose=()=>{$('serverState').textContent='offline';setTimeout(()=>token&&connectWs(),3000)};ws.onmessage=async ev=>{let m;try{m=JSON.parse(ev.data)}catch(_){return}if(m.type==='presence'){let i=contacts.findIndex(x=>x.uin===m.user.uin);if(i>=0){let old=contacts[i].status;contacts[i]=m.user;renderContacts();}}if(m.type==='message'){if(chatMode==='direct'&&(sel===m.message.from||sel===m.message.to))await loadChat();try{NativeBridge.notify('ICQ Reborn · '+(m.from?.nick||m.message.from),m.message.text||('Файл: '+m.message.file?.name),'message')}catch(_){}}if(m.type==='group-message'){if(chatMode==='group'&&selGroup===m.group.id)await loadChat();try{NativeBridge.notify(m.group.name,m.message.text||('Файл: '+m.message.file?.name),'message')}catch(_){}}if(m.type==='group-added')await loadGroups();if(m.type==='contact-added'){await loadContacts();try{NativeBridge.notify('ICQ Reborn','Новый контакт: '+(m.user?.nick||m.user?.uin),'auth')}catch(_){}}if(m.type==='call-signal')handleSignal(m)}}
+let reconnectTimer=null,reconnectDelay=1500;
+async function reconnectNow(){clearTimeout(reconnectTimer);reconnectTimer=null;const r=await resolveServer();if(!r.ok){$('serverState').textContent='offline';reconnectTimer=setTimeout(reconnectNow,Math.min(reconnectDelay*=1.6,15000));return}if(token)connectWs()}
+function connectWs(){if(!base||!token)return;try{if(ws){ws.onclose=null;ws.close()}}catch(_){}ws=new WebSocket(wsUrl());ws.onopen=()=>{reconnectDelay=1500;$('serverState').textContent='online';flushQueue()};ws.onclose=()=>{ws=null;$('serverState').textContent='offline';clearTimeout(reconnectTimer);reconnectTimer=setTimeout(reconnectNow,reconnectDelay);reconnectDelay=Math.min(reconnectDelay*1.6,15000)};ws.onmessage=async ev=>{let m;try{m=JSON.parse(ev.data)}catch(_){return}if(m.type==='presence'){let i=contacts.findIndex(x=>x.uin===m.user.uin);if(i>=0){let old=contacts[i].status;contacts[i]=m.user;renderContacts();}}if(m.type==='message'){if(chatMode==='direct'&&(sel===m.message.from||sel===m.message.to))await loadChat();try{NativeBridge.notify('ICQ Reborn · '+(m.from?.nick||m.message.from),m.message.text||('Файл: '+m.message.file?.name),'message')}catch(_){}}if(m.type==='group-message'){if(chatMode==='group'&&selGroup===m.group.id)await loadChat();try{NativeBridge.notify(m.group.name,m.message.text||('Файл: '+m.message.file?.name),'message')}catch(_){}}if(m.type==='group-added')await loadGroups();if(m.type==='contact-added'){await loadContacts();try{NativeBridge.notify('ICQ Reborn','Новый контакт: '+(m.user?.nick||m.user?.uin),'auth')}catch(_){}}if(m.type==='call-signal')handleSignal(m)}}
 function wsSend(o){if(ws?.readyState!==1)throw Error('Нет соединения с сервером');ws.send(JSON.stringify(o))}
 window.icqBackground=()=>{try{ws?.close()}catch(_){}ws=null;$('serverState').textContent='offline'};
-window.icqForeground=()=>{try{NativeBridge.bg(false)}catch(_){}if(token&&!ws)connectWs();flushQueue()};
+window.icqForeground=()=>{try{NativeBridge.bg(false)}catch(_){}if(token)reconnectNow();flushQueue()};
+window.addEventListener('online',()=>{if(token)reconnectNow()});
+window.addEventListener('offline',()=>{$('serverState').textContent='offline';try{ws?.close()}catch(_){}ws=null});
 
 async function rtcConfig(){return{iceServers:[{urls:['stun:stun.cloudflare.com:3478','stun:stun.l.google.com:19302']}],iceCandidatePoolSize:2}}
 async function newPc(peer,keepIce=false){try{pc?.close()}catch(_){}pc=new RTCPeerConnection(await rtcConfig());callPeer=peer;if(!keepIce)pendingIce=[];pc.onicecandidate=e=>{if(e.candidate&&callPeer)try{wsSend({type:'call-signal',to:callPeer,signalType:'ice',payload:e.candidate})}catch(_){} };pc.ontrack=e=>{if(!rs)rs=new MediaStream();for(const t of e.streams[0]?.getTracks()||[e.track])if(!rs.getTracks().some(x=>x.id===t.id))rs.addTrack(t);$('remote').srcObject=rs;$('remote').muted=false;$('remote').volume=1;$('remote').play().catch(()=>{})};pc.oniceconnectionstatechange=()=>{$('callState').textContent='ICE: '+pc.iceConnectionState};pc.onconnectionstatechange=()=>{if(pc.connectionState==='connected')$('callState').textContent='Звонок идёт';else if(pc.connectionState==='failed')$('callState').textContent='Не удалось соединиться';else if(pc.connectionState==='disconnected')$('callState').textContent='Соединение потеряно'};return pc}
