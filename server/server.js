@@ -56,7 +56,7 @@ function visibleStatus(u,viewer){
   if(s==='INVISIBLE')return 'OFFLINE';
   return s;
 }
-function publicUser(u,viewer){const isOwner=u.uin==='54151973';return {uin:u.uin,nick:u.nick,status:visibleStatus(u,viewer),phoneLinked:!!u.phoneNumber||Array.isArray(u.phoneHashes)&&u.phoneHashes.length>0,avatar:u.avatar||null,createdAt:u.createdAt||null,vip:!!u.vip,isOwner,isDeveloper:isOwner,roleBadges:isOwner?['Владелец','Разработчик']:[]}}
+function publicUser(u,viewer){const isOwner=u.uin==='54151973';const roleBadges=isOwner?['Владелец','Разработчик']:[];if(u.specialStatus)roleBadges.push(String(u.specialStatus).slice(0,32));return {uin:u.uin,nick:u.nick,status:visibleStatus(u,viewer),phoneLinked:!!u.phoneNumber||Array.isArray(u.phoneHashes)&&u.phoneHashes.length>0,avatar:u.avatar||null,createdAt:u.createdAt||null,vip:!!u.vip,isOwner,isDeveloper:isOwner,specialStatus:u.specialStatus||'',roleBadges}}
 function sign(u){return jwt.sign({uin:u.uin},JWT_SECRET,{expiresIn:'3650d'})}
 function auth(req,res,next){try{const h=req.headers.authorization||'',t=h.startsWith('Bearer ')?h.slice(7):String(req.query.token||''),p=jwt.verify(t,JWT_SECRET),u=db.users.find(x=>x.uin===p.uin);if(!u)return res.status(401).json({error:'Пользователь не найден'});req.user=u;next()}catch(_){res.status(401).json({error:'Нужен вход'})}}
 function emitTo(uin,obj){const ws=online.get(uin);if(ws&&ws.readyState===1)ws.send(JSON.stringify(obj))}
@@ -92,6 +92,23 @@ app.post('/api/login',async(req,res)=>{try{
 app.get('/api/account',auth,(req,res)=>res.json({uin:req.user.uin,nick:req.user.nick,phone:req.user.phoneNumber||'',createdAt:req.user.createdAt||null,lastLoginAt:req.user.lastLoginAt||null}));
 app.get('/api/me',auth,(req,res)=>res.json(publicUser(req.user,req.user.uin)));
 app.patch('/api/me',auth,(req,res)=>{if(req.body.nick!=null)req.user.nick=String(req.body.nick).trim().slice(0,32)||req.user.nick;if(req.body.status!=null&&['ONLINE','AWAY','DND','OCCUPIED','INVISIBLE'].includes(String(req.body.status)))req.user.status=String(req.body.status);if(Array.isArray(req.body.phoneHashes))req.user.phoneHashes=req.body.phoneHashes.filter(x=>/^[a-f0-9]{64}$/i.test(String(x))).slice(0,6);if(req.body.phoneNumber!=null)req.user.phoneNumber=String(req.body.phoneNumber||'').replace(/[^0-9+]/g,'').slice(0,24);save();broadcastPresence(req.user.uin);res.json(publicUser(req.user,req.user.uin))});
+
+app.post('/api/admin/users/:uin/status',auth,(req,res)=>{
+ if(req.user.uin!=='54151973')return res.status(403).json({error:'Только владелец проекта'});
+ const uin=String(req.params.uin||'').replace(/\D/g,'');
+ const target=db.users.find(x=>x.uin===uin);if(!target)return res.status(404).json({error:'UIN не найден'});
+ const value=String(req.body.status||'').trim().replace(/[<>]/g,'').slice(0,32);
+ target.specialStatus=value;save();broadcastPresence(target.uin);
+ addEvent(target.uin,'special-status',{status:value,by:req.user.uin,ts:Date.now()});
+ emitTo(target.uin,{type:'special-status',status:value,user:publicUser(target,target.uin)});
+ res.json({ok:true,user:publicUser(target,req.user.uin)});
+});
+app.get('/api/admin/users/:uin',auth,(req,res)=>{
+ if(req.user.uin!=='54151973')return res.status(403).json({error:'Только владелец проекта'});
+ const uin=String(req.params.uin||'').replace(/\D/g,'');const target=db.users.find(x=>x.uin===uin);
+ if(!target)return res.status(404).json({error:'UIN не найден'});
+ res.json(publicUser(target,req.user.uin));
+});
 
 app.post('/api/me/avatar',auth,(req,res)=>{try{const raw=String(req.body.data||'');if(!raw){req.user.avatar=null;save();broadcastPresence(req.user.uin);return res.json(publicUser(req.user,req.user.uin))}const m=raw.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/i);if(!m)return res.status(400).json({error:'Нужен PNG/JPEG/WEBP'});const buf=Buffer.from(m[2],'base64');if(buf.length>100*1024*1024)return res.status(413).json({error:'Аватар максимум 100 МБ'});req.user.avatar=raw;save();broadcastPresence(req.user.uin);res.json(publicUser(req.user,req.user.uin))}catch(e){res.status(500).json({error:e.message})}});
 
