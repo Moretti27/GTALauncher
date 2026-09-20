@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.24.0-alpha
+
+- Increased profile avatar upload limit from 2 MB to 100 MB.
+- Updated avatar upload UI to reflect the new limit.
+
 ## v0.23.0-alpha
 
 - Added user profile avatars stored on the PC server.
