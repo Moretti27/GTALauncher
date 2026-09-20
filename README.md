@@ -2,7 +2,7 @@
 
 ICQ Reborn is an experimental Android messenger inspired by the feel of classic instant messengers, with its own PC-hosted backend.
 
-Current development version: **v0.27.0-alpha**
+Current development version: **v0.28.0-alpha**
 
 ## What is included
 
@@ -82,18 +82,18 @@ It contains:
 
 Deleting `server/data/server_secret.txt` invalidates existing saved login sessions.
 
-## Current v0.27 changes
+## Current v0.28 changes
 
-- Android clients discover the server automatically from `server-config.json`.
-- Normal users no longer enter a server IP address or port.
-- The backend can remain on the owner's Windows PC and be published through Cloudflare Tunnel.
-- Background sync uses the same public endpoint as foreground messaging.
-- The public hostname can be changed centrally without rebuilding the Android APK.
-- Added Windows public-access setup and deployment documentation.
-- All v0.26 account/UIN registration and v0.25 offline behavior remain.
+- Removed Cloudflare Tunnel from the normal deployment path.
+- Android clients connect directly to the configured public IPv4 endpoint.
+- Current public endpoint: `http://31.135.108.120:22005`.
+- `server-config.json` remains the central endpoint registry, so an IP change does not require an APK rebuild.
+- Added Windows Firewall setup and public-connection diagnostics to the PC Host package.
+- Normal Android users still do not enter an IP address or port.
+- All UIN registration, offline cache, background notifications, groups, files, avatars and calls remain.
 
 ## Development status
 
-This is an alpha project. Public HTTPS/WSS access is supported through the configured tunnel endpoint. Reliable calls across arbitrary mobile networks / CGNAT may still require a dedicated TURN server.
+This is an alpha project. The current direct public-IP deployment uses HTTP/WS on TCP 22005. This enables Wi-Fi and mobile-network connectivity when router forwarding and Windows Firewall are configured, but it does not encrypt traffic in transit.
 
-For public Internet deployment, put the server behind HTTPS/WSS rather than exposing plain HTTP directly.
+For production use, migrate the same endpoint to HTTPS/WSS with a valid certificate and hostname. Reliable calls across restrictive mobile networks / CGNAT may also require a dedicated TURN server.
