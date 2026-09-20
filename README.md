@@ -2,7 +2,7 @@
 
 ICQ Reborn is an experimental Android messenger inspired by the feel of classic instant messengers, with its own PC-hosted backend.
 
-Current development version: **v0.22.0-alpha**
+Current development version: **v0.23.0-alpha**
 
 ## What is included
 
@@ -82,15 +82,14 @@ It contains:
 
 Deleting `server/data/server_secret.txt` invalidates existing saved login sessions.
 
-## Current v0.22 changes
+## Current v0.23 changes
 
-- Reworked audio/video WebRTC call handling.
-- Removed the unverified external TURN fallback from the client.
-- Improved ICE candidate handling for incoming calls.
-- Improved remote audio playback.
-- Tray notifications are suppressed while the app is open.
-- Persistent Android-side session storage remains enabled.
-- Server/application versions aligned to v0.22.
+- Added profile avatars with server-side persistence.
+- Avatars show in contacts, chat headers and call screens.
+- Added avatar upload/replacement/removal from Settings.
+- Redesigned the audio/video call screen.
+- Kept the v0.22 WebRTC and foreground-notification fixes.
+- Server/application versions aligned to v0.23.
 
 ## Development status
 
