@@ -20,7 +20,7 @@
     <div id="authState" class="state"></div>
   </div>
   <div class="card hide" id="regCard">
-    <h3>Регистрация</h3><input id="regNick" class="f" style="width:100%" placeholder="Ник"><input id="regPass" class="f" style="width:100%;margin-top:8px" type="password" placeholder="Пароль, минимум 6 символов">
+    <h3>Регистрация</h3><input id="regNick" class="f" style="width:100%" placeholder="Ник"><input id="regPhone" class="f" style="width:100%;margin-top:8px" inputmode="tel" placeholder="Номер телефона (для синхронизации контактов)"><input id="regPass" class="f" style="width:100%;margin-top:8px" type="password" placeholder="Пароль, минимум 6 символов">
     <div class="row" style="margin-top:10px"><button id="regBtn" class="primary grow">Создать аккаунт</button><button id="showLogin" class="grow">Назад</button></div>
   </div>
 </div>
@@ -29,8 +29,8 @@
 <div class="top"><span class="logo">🌼</span><div><b>ICQ <span class="accent">Reborn</span></b><div class="sub" id="head">подключение...</div></div><span class="grow"></span><span id="serverState" class="pill">offline</span></div>
 <div class="wrap">
 <section id="contacts" class="screen on">
- <div class="card"><div class="row"><h3 class="grow">Мой UIN</h3><span id="uin" class="pill"></span></div><div class="row"><input id="nick" class="f grow"><select id="status"><option>ONLINE</option><option>AWAY</option><option>DND</option><option>OCCUPIED</option><option>INVISIBLE</option></select><button id="save" class="primary">Сохранить</button></div></div>
- <div class="card"><div class="row"><h3 class="grow">Контакты</h3><input id="addUin" class="f" placeholder="UIN пользователя"><button id="addBtn" class="primary">Добавить</button></div><div id="list"></div></div>
+ <div class="card"><div class="row"><h3 class="grow">Мой UIN</h3><span id="uin" class="pill"></span></div><div class="row"><input id="nick" class="f grow"><select id="status"><option>ONLINE</option><option>AWAY</option><option>DND</option><option>OCCUPIED</option><option>INVISIBLE</option></select><button id="save" class="primary">Сохранить</button></div><div class="row" style="margin-top:9px"><input id="myPhone" class="f grow" inputmode="tel" placeholder="Мой номер для поиска в контактах"><button id="savePhone">Привязать номер</button></div></div>
+ <div class="card"><div class="row"><h3 class="grow">Контакты</h3><input id="addUin" class="f" placeholder="UIN пользователя"><button id="addBtn" class="primary">Добавить</button></div><div class="row" style="margin-top:9px"><button id="syncPhone" class="primary grow">📱 Синхронизировать контакты телефона</button></div><div id="syncState" class="state"></div><div id="list"></div></div>
 </section>
 <section id="chat" class="screen"><div class="card"><div class="row"><h3 id="chatTitle" class="grow">Чат</h3><span id="peer" class="pill">сервер</span></div><div id="messages" class="chat"></div><div class="composer"><input id="msg" class="f" placeholder="Сообщение"><button id="send" class="primary">➤</button></div></div></section>
 <section id="calls" class="screen"><div id="incoming" class="card hide"><b id="incomingText">Входящий звонок</b><div class="row" style="margin-top:8px"><button id="take" class="primary">Принять</button><button id="reject" class="danger">Отклонить</button></div></div><div class="card"><h3>Звонки</h3><div class="row"><button id="callA" class="primary">📞 Аудио</button><button id="callV" class="primary">🎥 Видео</button><button id="hang">Завершить</button><button id="mute">🎙️</button><button id="cam">📷</button></div><div id="callState" class="state">ожидание</div><div class="videos"><video id="remote" autoplay playsinline></video><video id="local" autoplay muted playsinline></video></div></div></section>
@@ -47,6 +47,10 @@ let token=localStorage.getItem('token')||'';
 let me=null,contacts=[],sel='',ws=null,pc=null,ls=null,rs=null,pendingCall=null;
 
 function toast(s){try{NativeBridge.toast(s)}catch(_){alert(s)}}
+function normalizePhone(s){return String(s||'').replace(/\D/g,'')}
+function phoneVariants(s){let d=normalizePhone(s),a=[];if(d.length>=7)a.push(d);if(d.length>9)a.push(d.slice(-9));if(d.length>10)a.push(d.slice(-10));return [...new Set(a)]}
+async function sha256(s){let b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function phoneHashes(s){let out=[];for(const v of phoneVariants(s))out.push(await sha256(v));return out}
 function authHeaders(){return token?{'Authorization':'Bearer '+token}:{}}
 async function api(path,opt={}){
   if(!base)throw Error('Укажи адрес сервера');
@@ -69,10 +73,10 @@ function show(n){document.querySelectorAll('.screen').forEach(x=>x.classList.tog
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.s));
 
 async function afterAuth(user){
-  me=user;showApp();renderMe();await loadContacts();connectWs();
+  me=user;showApp();renderMe();await loadContacts();connectWs();try{NativeBridge.bg(true);NativeBridge.play('startup')}catch(_){}
 }
 function renderMe(){
-  $('uin').textContent=me?.uin||'';$('nick').value=me?.nick||'';$('status').value=me?.status||'ONLINE';$('head').textContent=(me?.nick||'')+' · '+(me?.uin||'');
+  $('uin').textContent=me?.uin||'';$('nick').value=me?.nick||'';$('status').value=me?.status||'ONLINE';$('myPhone').value=localStorage.getItem('myPhone')||'';$('head').textContent=(me?.nick||'')+' · '+(me?.uin||'');
 }
 async function loadContacts(){
   contacts=await api('/api/contacts');renderContacts();
@@ -99,7 +103,7 @@ function renderMessages(list){
 }
 async function sendMessage(){
   const x=$('msg'),text=x.value.trim();if(!text||!sel)return;
-  try{await api('/api/messages',{method:'POST',body:JSON.stringify({to:sel,text})});x.value='';await loadChat()}catch(e){toast(e.message)}
+  try{await api('/api/messages',{method:'POST',body:JSON.stringify({to:sel,text})});x.value='';try{NativeBridge.play('out')}catch(_){}await loadChat()}catch(e){toast(e.message)}
 }
 $('send').onclick=sendMessage;$('msg').onkeydown=e=>{if(e.key==='Enter')sendMessage()};
 
@@ -112,10 +116,10 @@ function connectWs(){
     ws.onerror=()=>{$('serverState').textContent='error'};
     ws.onmessage=async ev=>{
       let m;try{m=JSON.parse(ev.data)}catch(_){return}
-      if(m.type==='message'){await loadContacts();if(sel===m.message.from||sel===m.message.to)await loadChat();toast('Новое сообщение от '+(m.from?.nick||m.message.from))}
-      if(m.type==='presence'){const i=contacts.findIndex(x=>x.uin===m.user.uin);if(i>=0){contacts[i]=m.user;renderContacts()}}
-      if(m.type==='contact-added'){await loadContacts()}
-      if(m.type==='call-signal')handleSignal(m);
+      if(m.type==='message'){await loadContacts();if(sel===m.message.from||sel===m.message.to)await loadChat();let who=m.from?.nick||m.message.from;try{NativeBridge.notify('ICQ Reborn · '+who,m.message.text,'message')}catch(_){toast('Новое сообщение от '+who)}}
+      if(m.type==='presence'){const i=contacts.findIndex(x=>x.uin===m.user.uin);if(i>=0){let was=contacts[i].status;contacts[i]=m.user;renderContacts();if(was!=='ONLINE'&&m.user.status==='ONLINE')try{NativeBridge.play('online')}catch(_){}}}
+      if(m.type==='contact-added'){await loadContacts();try{NativeBridge.notify('ICQ Reborn','Новый контакт: '+(m.user?.nick||m.user?.uin),'auth')}catch(_){}}
+      if(m.type==='call-signal'){if(m.signalType==='offer')try{NativeBridge.notify('ICQ Reborn','Входящий звонок от '+(m.fromUser?.nick||m.from),'call')}catch(_){}handleSignal(m);}
     };
   }catch(_){}
 }
@@ -143,11 +147,24 @@ $('loginBtn').onclick=async()=>{
   try{base=$('authServer').value.trim().replace(/\/$/,'')||'http://192.168.3.3:22005';if(base.endsWith(':8080'))base=base.replace(/:8080$/,':22005');localStorage.setItem('serverUrl',base);if(!(await checkServer()))throw Error('Сервер недоступен');const r=await api('/api/login',{method:'POST',body:JSON.stringify({uin:$('loginUin').value.trim(),password:$('loginPass').value})});token=r.token;localStorage.setItem('token',token);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}
 };
 $('regBtn').onclick=async()=>{
-  try{base=$('authServer').value.trim().replace(/\/$/,'')||'http://192.168.3.3:22005';if(base.endsWith(':8080'))base=base.replace(/:8080$/,':22005');localStorage.setItem('serverUrl',base);if(!(await checkServer()))throw Error('Сервер недоступен');const r=await api('/api/register',{method:'POST',body:JSON.stringify({nick:$('regNick').value.trim(),password:$('regPass').value})});token=r.token;localStorage.setItem('token',token);toast('Твой UIN: '+r.user.uin);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}
+  try{base=$('authServer').value.trim().replace(/\/$/,'')||'http://192.168.3.3:22005';if(base.endsWith(':8080'))base=base.replace(/:8080$/,':22005');localStorage.setItem('serverUrl',base);if(!(await checkServer()))throw Error('Сервер недоступен');let rp=$('regPhone').value.trim(),ph=rp?await phoneHashes(rp):[];const r=await api('/api/register',{method:'POST',body:JSON.stringify({nick:$('regNick').value.trim(),password:$('regPass').value,phoneHashes:ph})});if(rp){localStorage.setItem('myPhone',rp)};token=r.token;localStorage.setItem('token',token);toast('Твой UIN: '+r.user.uin);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}
 };
 $('showReg').onclick=()=>{$('loginCard').classList.add('hide');$('regCard').classList.remove('hide')};
 $('showLogin').onclick=()=>{$('regCard').classList.add('hide');$('loginCard').classList.remove('hide')};
 $('save').onclick=async()=>{try{me=await api('/api/me',{method:'PATCH',body:JSON.stringify({nick:$('nick').value.trim(),status:$('status').value})});renderMe()}catch(e){toast(e.message)}};
+$('savePhone').onclick=async()=>{try{let p=$('myPhone').value.trim();let hashes=p?await phoneHashes(p):[];me=await api('/api/me',{method:'PATCH',body:JSON.stringify({phoneHashes:hashes})});if(p)localStorage.setItem('myPhone',p);else localStorage.removeItem('myPhone');toast(p?'Номер привязан':'Номер удалён')}catch(e){toast(e.message)}};
+$('syncPhone').onclick=async()=>{
+  const st=$('syncState');
+  try{
+    if(!NativeBridge.hasContactsPermission()){NativeBridge.requestContacts();st.textContent='Разреши доступ к контактам и нажми кнопку ещё раз.';return}
+    let raw=JSON.parse(NativeBridge.contacts()||'[]');if(!raw.length){st.textContent='В телефонной книге не найдено номеров.';return}
+    st.textContent='Проверяю '+raw.length+' номеров…';
+    let set=new Set();for(const n of raw){for(const v of phoneVariants(n))set.add(await sha256(v))}
+    const r=await api('/api/contacts/sync',{method:'POST',body:JSON.stringify({hashes:[...set]})});
+    await loadContacts();st.textContent=r.added?'Найдено контактов ICQ Reborn: '+r.added:'Среди телефонных контактов пока никого не найдено.';
+    if(r.added)try{NativeBridge.play('auth')}catch(_){}
+  }catch(e){st.textContent='Ошибка синхронизации: '+e.message;try{NativeBridge.play('error')}catch(_){}}
+};
 $('addBtn').onclick=async()=>{try{await api('/api/contacts',{method:'POST',body:JSON.stringify({uin:$('addUin').value.trim()})});$('addUin').value='';await loadContacts()}catch(e){toast(e.message)}};
 $('saveServer').onclick=()=>{base=$('serverUrl').value.trim().replace(/\/$/,'');localStorage.setItem('serverUrl',base);toast('Адрес сохранён');if(token)connectWs()};
 $('logout').onclick=()=>{token='';localStorage.removeItem('token');try{ws?.close()}catch(_){}showAuth()};

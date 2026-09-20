@@ -4,7 +4,7 @@ const http=require('http');
 const express=require('express');
 const cors=require('cors');
 const bcrypt=require('bcryptjs');
-const jwt=require('jsonwebtoken');
+const jwt=require('jsonwebtoken');\nconst crypto=require('crypto');
 const {WebSocketServer}=require('ws');
 
 const PORT=Number(process.env.PORT||22005);
@@ -31,7 +31,7 @@ function makeUin(){
   }
   throw new Error('UIN generation failed');
 }
-function publicUser(u){return {uin:u.uin,nick:u.nick,status:online.has(u.uin)?'ONLINE':(u.status||'OFFLINE')}}
+function publicUser(u){return {uin:u.uin,nick:u.nick,status:online.has(u.uin)?'ONLINE':(u.status||'OFFLINE'),phoneLinked:Array.isArray(u.phoneHashes)&&u.phoneHashes.length>0}}
 function sign(u){return jwt.sign({uin:u.uin},JWT_SECRET,{expiresIn:'30d'})}
 function auth(req,res,next){
   try{
@@ -48,7 +48,7 @@ const app=express();
 app.use(cors());
 app.use(express.json({limit:'2mb'}));
 
-app.get('/health',(req,res)=>res.json({ok:true,name:'ICQ Reborn Server',version:'0.16.0'}));
+app.get('/health',(req,res)=>res.json({ok:true,name:'ICQ Reborn Server',version:'0.18.0'}));
 
 app.post('/api/register',async(req,res)=>{
   try{
@@ -58,7 +58,8 @@ app.post('/api/register',async(req,res)=>{
     if(password.length<6)return res.status(400).json({error:'Пароль минимум 6 символов'});
     const uin=makeUin();
     const passwordHash=await bcrypt.hash(password,10);
-    const user={uin,nick,passwordHash,status:'ONLINE',createdAt:Date.now()};
+    const phoneHashes=Array.isArray(req.body.phoneHashes)?req.body.phoneHashes.filter(x=>/^[a-f0-9]{64}$/i.test(String(x))).slice(0,6):[];
+    const user={uin,nick,passwordHash,phoneHashes,status:'ONLINE',createdAt:Date.now()};
     db.users.push(user);db.contacts[uin]=[];save();
     res.json({token:sign(user),user:publicUser(user)});
   }catch(e){res.status(500).json({error:e.message})}
@@ -77,6 +78,7 @@ app.get('/api/me',auth,(req,res)=>res.json(publicUser(req.user)));
 app.patch('/api/me',auth,(req,res)=>{
   if(req.body.nick!=null)req.user.nick=String(req.body.nick).trim().slice(0,32)||req.user.nick;
   if(req.body.status!=null)req.user.status=String(req.body.status).slice(0,20);
+  if(Array.isArray(req.body.phoneHashes))req.user.phoneHashes=req.body.phoneHashes.filter(x=>/^[a-f0-9]{64}$/i.test(String(x))).slice(0,6);
   save();res.json(publicUser(req.user));broadcastPresence(req.user.uin);
 });
 
@@ -89,6 +91,25 @@ app.get('/api/users/:uin',auth,(req,res)=>{
 app.get('/api/contacts',auth,(req,res)=>{
   const list=(db.contacts[req.user.uin]||[]).map(id=>db.users.find(x=>x.uin===id)).filter(Boolean).map(publicUser);
   res.json(list);
+});
+
+app.post('/api/contacts/sync',auth,(req,res)=>{
+  const hashes=new Set((Array.isArray(req.body.hashes)?req.body.hashes:[]).map(String).filter(x=>/^[a-f0-9]{64}$/i.test(x)).slice(0,8000));
+  if(!hashes.size)return res.json({matched:[],added:0});
+  db.contacts[req.user.uin]??=[];
+  const matched=[];
+  for(const u of db.users){
+    if(u.uin===req.user.uin||!Array.isArray(u.phoneHashes))continue;
+    if(u.phoneHashes.some(h=>hashes.has(h))){
+      db.contacts[u.uin]??=[];
+      if(!db.contacts[req.user.uin].includes(u.uin))db.contacts[req.user.uin].push(u.uin);
+      if(!db.contacts[u.uin].includes(req.user.uin))db.contacts[u.uin].push(req.user.uin);
+      matched.push(publicUser(u));
+      emitTo(u.uin,{type:'contact-added',user:publicUser(req.user)});
+    }
+  }
+  save();
+  res.json({matched,added:matched.length});
 });
 
 app.post('/api/contacts',auth,(req,res)=>{
