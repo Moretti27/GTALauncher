@@ -157,6 +157,8 @@ app.post('/api/support/yoomoney',(req,res)=>{
 
 const server=http.createServer(app),wss=new WebSocketServer({server,path:'/ws'});
 wss.on('connection',(ws,req)=>{try{const url=new URL(req.url,'http://localhost'),p=jwt.verify(url.searchParams.get('token')||'',JWT_SECRET),user=db.users.find(x=>x.uin===p.uin);if(!user){ws.close();return}online.set(user.uin,ws);ws.uin=user.uin;ws.send(JSON.stringify({type:'hello',user:publicUser(user,user.uin)}));broadcastPresence(user.uin);ws.on('message',buf=>{try{const m=JSON.parse(String(buf));if(m.type==='call-signal'&&m.to)emitTo(String(m.to),{type:'call-signal',from:user.uin,fromUser:publicUser(user,String(m.to)),signalType:m.signalType,payload:m.payload});if(m.type==='typing'&&m.to)emitTo(String(m.to),{type:'typing',from:user.uin,value:!!m.value})}catch(_){}});ws.on('close',()=>{if(online.get(user.uin)===ws)online.delete(user.uin);broadcastPresence(user.uin)})}catch(_){ws.close()}});
-server.listen(PORT,'0.0.0.0',()=>console.log('ICQ Reborn Server v0.32 on http://0.0.0.0:'+PORT);
-console.log('YooMoney webhook: http://PUBLIC-IP:'+PORT+'/api/support/yoomoney');
-console.log('YooMoney notification secret: '+YOOMONEY_NOTIFICATION_SECRET));
+server.listen(PORT,'0.0.0.0',()=>{
+ console.log('ICQ Reborn Server v0.32 on http://0.0.0.0:'+PORT);
+ console.log('YooMoney webhook: http://PUBLIC-IP:'+PORT+'/api/support/yoomoney');
+ console.log('YooMoney notification secret: '+YOOMONEY_NOTIFICATION_SECRET);
+});
