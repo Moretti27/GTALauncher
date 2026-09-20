@@ -12,6 +12,9 @@ import android.webkit.*;
 import android.widget.Toast;
 import org.json.JSONArray;
 import java.util.*;
+import java.net.*;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 public class MainActivity extends Activity{
  WebView w; ValueCallback<Uri[]> fileCb; static final int FILE=43, CONTACTS_REQ=44;
@@ -162,6 +165,17 @@ public class MainActivity extends Activity{
   @JavascriptInterface public void toast(String t){runOnUiThread(()->Toast.makeText(MainActivity.this,t,Toast.LENGTH_SHORT).show());}
   @JavascriptInterface public void bg(boolean on){runOnUiThread(()->{if(on)BackgroundSyncReceiver.schedule(MainActivity.this,true);else BackgroundSyncReceiver.cancel(MainActivity.this);});}
   @JavascriptInterface public boolean isForeground(){return appForeground;}
+  @JavascriptInterface public String health(String base){
+   try{
+    URL u=new URL(String.valueOf(base).replaceAll("/+$","")+"/health");
+    HttpURLConnection h=(HttpURLConnection)u.openConnection();
+    h.setConnectTimeout(4500);h.setReadTimeout(4500);h.setRequestMethod("GET");h.setUseCaches(false);
+    int code=h.getResponseCode();if(code<200||code>=300)return "";
+    InputStream in=h.getInputStream();ByteArrayOutputStream b=new ByteArrayOutputStream();byte[] x=new byte[4096];int n;
+    while((n=in.read(x))>0)b.write(x,0,n);in.close();
+    return b.toString(StandardCharsets.UTF_8.name());
+   }catch(Exception e){return "";}
+  }
   @JavascriptInterface public void play(String type){playRetro(type);}
   @JavascriptInterface public void notify(String title,String text,String type){notifyUser(title,text,type);}
   @JavascriptInterface public boolean hasContactsPermission(){return ok(Manifest.permission.READ_CONTACTS);}
