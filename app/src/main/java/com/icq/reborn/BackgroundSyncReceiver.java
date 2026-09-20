@@ -59,6 +59,7 @@ public class BackgroundSyncReceiver extends BroadcastReceiver {
     }
    }catch(Exception ignored){}
   }
+  if(base.isEmpty())base="http://31.135.108.120:22005";
   if(token.isEmpty()||base.isEmpty())return;
   long since=p.getLong("lastEventPoll",System.currentTimeMillis());
   URL u=new URL(base.replaceAll("/+$","")+"/api/events?since="+since);
