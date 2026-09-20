@@ -171,12 +171,22 @@ public class MainActivity extends Activity{
    try{
     URL u=new URL(String.valueOf(base).replaceAll("/+$","")+"/health");
     HttpURLConnection h=(HttpURLConnection)u.openConnection();
-    h.setConnectTimeout(4500);h.setReadTimeout(4500);h.setRequestMethod("GET");h.setUseCaches(false);
+    h.setConnectTimeout(1800);h.setReadTimeout(1800);h.setRequestMethod("GET");h.setUseCaches(false);
     int code=h.getResponseCode();if(code<200||code>=300)return "";
     InputStream in=h.getInputStream();ByteArrayOutputStream b=new ByteArrayOutputStream();byte[] x=new byte[4096];int n;
     while((n=in.read(x))>0)b.write(x,0,n);in.close();
     return b.toString(StandardCharsets.UTF_8.name());
    }catch(Exception e){return "";}
+  }
+  @JavascriptInterface public void healthAsync(String base,String callbackId){
+   new Thread(()->{
+    String raw=health(base);
+    runOnUiThread(()->{
+     try{
+      if(w!=null)w.evaluateJavascript("window.__nativeHealthResult&&window.__nativeHealthResult("+JSONObject.quote(callbackId)+","+JSONObject.quote(raw)+")",null);
+     }catch(Exception e){}
+    });
+   }).start();
   }
   @JavascriptInterface public void play(String type){playRetro(type);}
   @JavascriptInterface public void notify(String title,String text,String type){notifyUser(title,text,type);}
