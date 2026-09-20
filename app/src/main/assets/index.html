@@ -80,37 +80,75 @@ const BOOTSTRAP_URL='https://raw.githubusercontent.com/Moretti27/ICQ-REBORN/main
 const PUBLIC_FALLBACK='http://31.135.108.120:22005';
 const LOCAL_FALLBACK='http://192.168.3.3:22005';
 let base=(storeGet('resolvedServer')||'').replace(/\/$/,'');
-async function probeServer(u){
+const nativeHealthWaiters=new Map();
+window.__nativeHealthResult=(id,raw)=>{const f=nativeHealthWaiters.get(id);if(f){nativeHealthWaiters.delete(id);f(raw||'')}};
+function nativeHealthAsync(u,timeout=2200){
+ return new Promise(resolve=>{
+  try{
+   if(typeof NativeBridge==='undefined'||!NativeBridge.healthAsync)return resolve('');
+   const id='h'+Date.now().toString(36)+Math.random().toString(36).slice(2);
+   let done=false;
+   const finish=v=>{if(done)return;done=true;nativeHealthWaiters.delete(id);resolve(v||'')};
+   nativeHealthWaiters.set(id,finish);
+   NativeBridge.healthAsync(u,id);
+   setTimeout(()=>finish(''),timeout);
+  }catch(_){resolve('')}
+ });
+}
+async function webHealth(u,timeout=2000){
  try{
-  if(typeof NativeBridge!=='undefined'&&NativeBridge.health){
-   const raw=NativeBridge.health(u);
-   if(raw){const d=JSON.parse(raw);if(d&&d.ok)return d}
-  }
- }catch(_){}
- try{
-  const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),4500);
+  const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),timeout);
   const r=await fetch(u+'/health',{signal:ctl.signal,cache:'no-store'});
   clearTimeout(tm);if(!r.ok)return null;const d=await r.json();return d&&d.ok?d:null;
  }catch(_){return null}
 }
-async function resolveServer(){
- const candidates=[];
+async function probeServer(u){
+ const nativeP=nativeHealthAsync(u).then(raw=>{try{const d=raw?JSON.parse(raw):null;return d&&d.ok?d:null}catch(_){return null}});
+ const webP=webHealth(u);
+ const [n,w]=await Promise.all([nativeP,webP]);
+ return n||w||null;
+}
+function firstHealthy(candidates){
+ const list=[...new Set(candidates.filter(u=>/^https?:\/\//i.test(u)))];
+ return new Promise(resolve=>{
+  if(!list.length)return resolve(null);
+  let left=list.length,done=false;
+  for(const u of list)probeServer(u).then(d=>{
+   if(done)return;
+   if(d){done=true;resolve({ok:true,version:d.version||'',url:u});return}
+   if(--left===0)resolve(null);
+  }).catch(()=>{if(!done&&--left===0)resolve(null)});
+ });
+}
+async function bootstrapCandidates(){
  try{
-  const r=await fetch(BOOTSTRAP_URL+'?t='+Date.now(),{cache:'no-store'});
-  if(r.ok){
-   const c=await r.json();
-   if(c.publicBaseUrl)candidates.push(String(c.publicBaseUrl).replace(/\/$/,''));
-   if(Array.isArray(c.fallbacks))for(const x of c.fallbacks)if(x)candidates.push(String(x).replace(/\/$/,''));
-  }
+  const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),1500);
+  const r=await fetch(BOOTSTRAP_URL+'?t='+Date.now(),{cache:'no-store',signal:ctl.signal});
+  clearTimeout(tm);if(!r.ok)return [];
+  const c=await r.json(),a=[];
+  if(c.publicBaseUrl)a.push(String(c.publicBaseUrl).replace(/\/$/,''));
+  if(Array.isArray(c.fallbacks))for(const x of c.fallbacks)if(x)a.push(String(x).replace(/\/$/,''));
+  return a;
+ }catch(_){return []}
+}
+async function resolveServer(){
+ const saved=(base||storeGet('resolvedServer')||'').replace(/\/$/,'');
+ const immediate=[saved,PUBLIC_FALLBACK,LOCAL_FALLBACK].filter(Boolean);
+ const quick=firstHealthy(immediate);
+ const discovered=bootstrapCandidates().then(a=>firstHealthy(a));
+ let result=null;
+ try{
+  result=await Promise.race([
+   quick.then(x=>x||new Promise(()=>{})),
+   discovered.then(x=>x||new Promise(()=>{})),
+   new Promise(r=>setTimeout(()=>r(null),2600))
+  ]);
  }catch(_){}
- if(base)candidates.push(base);
- candidates.push(PUBLIC_FALLBACK);
- candidates.push(LOCAL_FALLBACK);
- for(const u of [...new Set(candidates)]){
-  if(!/^https?:\/\//i.test(u))continue;
-  const d=await probeServer(u);
-  if(d){base=u;storeSet('resolvedServer',base);return {ok:true,version:d.version||'',url:base}}
+ if(!result){
+  const extra=await bootstrapCandidates();
+  result=await firstHealthy([...immediate,...extra]);
  }
+ if(result?.ok){base=result.url;storeSet('resolvedServer',base);return result}
  return {ok:false,url:''}
 }
 let token=storeGet('token')||'',me=null,contacts=[],groups=[],groupInvites=[],sel='',selGroup='',chatMode='direct',ws=null,pc=null,ls=null,rs=null,pendingCall=null,pendingIce=[],callPeer='';
