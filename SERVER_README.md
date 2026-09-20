@@ -1,14 +1,25 @@
-# ICQ Reborn Server v0.29
+# ICQ Reborn Server v0.30
 
 ICQ Reborn uses a PC-hosted Node.js server on TCP port **22005**.
 
-## Windows setup
+## One-file Windows launcher
 
-1. Keep the existing `server/data/` folder when updating.
-2. Run `SETUP_NETWORK.bat` once as Administrator. It creates the Windows Firewall inbound rule for TCP 22005.
-3. Keep the HUAWEI AX3 port-forward rule: TCP 22005 -> this PC's LAN IPv4 address:22005.
-4. Run `START_SERVER.bat`.
-5. Run `CHECK_CONNECTION.bat` to verify local and public access.
+The PC Host now uses only one BAT file:
+
+```
+START_SERVER.bat
+```
+
+Run it normally. On the first launch, if the Windows Firewall rule is missing, the launcher automatically requests Administrator rights and creates the inbound TCP 22005 rule.
+
+The same launcher then:
+
+- checks that Node.js is installed;
+- installs server dependencies when `node_modules` is missing;
+- detects the LAN IPv4 address, preferring `192.168.3.x`;
+- shows local, LAN and public endpoints;
+- reminds you about router port forwarding;
+- starts `server/server.js`.
 
 Configured public endpoint:
 
@@ -16,43 +27,24 @@ Configured public endpoint:
 http://31.135.108.120:22005
 ```
 
-Health endpoint:
+Router forwarding should remain:
 
 ```
-http://31.135.108.120:22005/health
+TCP 22005 -> 192.168.3.3:22005
 ```
-
-Android clients discover this endpoint through the repository `server-config.json` file, so users do not enter an IP address or port.
 
 ## Persistent data
 
-All persistent server data is stored under:
+Keep the entire `server/data/` directory when updating the Host.
 
-```
-server/data/
-```
+It contains accounts, contacts, messages, groups, uploaded files and `server_secret.txt`.
 
-Important files/directories:
-
-- `db.json` — accounts, contacts, messages, groups and events.
-- `db.json.bak` — previous database backup created during writes.
-- `files/` — uploaded chat/group files.
-- `server_secret.txt` — persistent JWT signing secret.
-
-Do not delete `server/data/` or `server_secret.txt` during an update.
-
-## Internet access
-
-The server listens on `0.0.0.0:22005`, so the router can forward TCP 22005 to it.
-
-For public access to work, the Windows PC must be online, the Node.js server must be running, Windows Firewall must allow TCP 22005, and the router port-forward must point to the PC's current LAN IPv4 address.
-
-If the ISP changes the public IPv4 address, update `publicBaseUrl` in `server-config.json`. Installed v0.29 clients will discover the new address automatically.
+Deleting `server/data/server_secret.txt` invalidates existing login sessions.
 
 ## Security note
 
-The current direct-IP test deployment uses plain HTTP/WS. This is suitable for connectivity testing but does not encrypt login credentials or message traffic in transit. A production deployment should move to HTTPS/WSS with a valid certificate and hostname.
+The current direct-IP deployment uses HTTP/WS, so traffic is not encrypted in transit. A production deployment should move to HTTPS/WSS with a valid hostname and certificate.
 
 ## Calls
 
-Audio/video calls use WebRTC. Some mobile networks and restrictive NAT environments may still require a TURN server for reliable calls.
+Audio/video calls use WebRTC. Some restrictive mobile networks may still require a TURN server for reliable calls.
