@@ -46,7 +46,7 @@ function groupFor(id,user){return db.groups.find(g=>g.id===id&&g.members.include
 function safeName(n){return String(n||'file').replace(/[\\/:*?"<>|]/g,'_').slice(0,120)}
 
 const app=express();app.use(cors());app.use(express.json({limit:'140mb'}));
-app.get('/health',(req,res)=>res.json({ok:true,name:'ICQ Reborn Server',version:'0.21.0'}));
+app.get('/health',(req,res)=>res.json({ok:true,name:'ICQ Reborn Server',version:'0.22.0'}));
 app.post('/api/register',async(req,res)=>{try{const nick=String(req.body.nick||'').trim().slice(0,32),password=String(req.body.password||'');if(nick.length<2)return res.status(400).json({error:'Ник минимум 2 символа'});if(password.length<6)return res.status(400).json({error:'Пароль минимум 6 символов'});const uin=makeUin(),passwordHash=await bcrypt.hash(password,10),phoneHashes=Array.isArray(req.body.phoneHashes)?req.body.phoneHashes.filter(x=>/^[a-f0-9]{64}$/i.test(String(x))).slice(0,6):[];const user={uin,nick,passwordHash,phoneHashes,status:'ONLINE',createdAt:Date.now()};db.users.push(user);db.contacts[uin]=[];save();res.json({token:sign(user),user:publicUser(user,uin)})}catch(e){res.status(500).json({error:e.message})}});
 app.post('/api/login',async(req,res)=>{const u=db.users.find(x=>x.uin===String(req.body.uin||'').trim());if(!u||!(await bcrypt.compare(String(req.body.password||''),u.passwordHash)))return res.status(401).json({error:'Неверный UIN или пароль'});res.json({token:sign(u),user:publicUser(u,u.uin)})});
 app.get('/api/me',auth,(req,res)=>res.json(publicUser(req.user,req.user.uin)));
@@ -67,4 +67,4 @@ app.post('/api/groups/:id/messages',auth,(req,res)=>{const g=groupFor(req.params
 
 const server=http.createServer(app),wss=new WebSocketServer({server,path:'/ws'});
 wss.on('connection',(ws,req)=>{try{const url=new URL(req.url,'http://localhost'),p=jwt.verify(url.searchParams.get('token')||'',JWT_SECRET),user=db.users.find(x=>x.uin===p.uin);if(!user){ws.close();return}online.set(user.uin,ws);ws.uin=user.uin;ws.send(JSON.stringify({type:'hello',user:publicUser(user,user.uin)}));broadcastPresence(user.uin);ws.on('message',buf=>{try{const m=JSON.parse(String(buf));if(m.type==='call-signal'&&m.to)emitTo(String(m.to),{type:'call-signal',from:user.uin,fromUser:publicUser(user,String(m.to)),signalType:m.signalType,payload:m.payload});if(m.type==='typing'&&m.to)emitTo(String(m.to),{type:'typing',from:user.uin,value:!!m.value})}catch(_){}});ws.on('close',()=>{if(online.get(user.uin)===ws)online.delete(user.uin);broadcastPresence(user.uin)})}catch(_){ws.close()}});
-server.listen(PORT,'0.0.0.0',()=>console.log('ICQ Reborn Server v0.20 on http://0.0.0.0:'+PORT));
+server.listen(PORT,'0.0.0.0',()=>console.log('ICQ Reborn Server v0.22 on http://0.0.0.0:'+PORT));
