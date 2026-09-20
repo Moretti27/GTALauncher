@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-title ICQ Reborn Server v0.28
+title ICQ Reborn Server v0.29
 cd /d "%~dp0server"
 
 where node >nul 2>nul
@@ -32,6 +32,10 @@ if errorlevel 1 (
   )
 )
 
+for /f "tokens=2 delims=:" %%A in ('ipconfig ^| findstr /C:"IPv4" ^| findstr "192.168.3."') do (
+  set "LANIP=%%A"
+  goto :gotip
+)
 for /f "tokens=2 delims=:" %%A in ('ipconfig ^| findstr /C:"IPv4"') do (
   set "LANIP=%%A"
   goto :gotip
@@ -41,7 +45,7 @@ if defined LANIP set "LANIP=%LANIP: =%"
 
 echo.
 echo ==========================================
-echo   ICQ Reborn Server v0.28
+echo   ICQ Reborn Server v0.29
 echo ==========================================
 echo Port:       22005
 echo Local:      http://localhost:22005
