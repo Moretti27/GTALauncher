@@ -1,43 +1,174 @@
 <!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>ICQ Reborn</title><style>
 :root{--bg:#dfe5da;--panel:#08150d;--panel2:#0b1d12;--green:#67ed5f;--green2:#afff6e;--line:rgba(139,255,116,.22);--muted:#abc0ae;--text:#f5fff5;--red:#ff5959}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#e7ebe3 0%,#dde3da 100%);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh}
-button,input,textarea,select{font:inherit}.top{position:sticky;top:0;z-index:5;background:radial-gradient(circle at 15% 0,rgba(45,160,73,.28),transparent 35%),linear-gradient(180deg,#07110b,#0a140d);color:white;padding:14px 16px;display:flex;gap:12px;align-items:center;box-shadow:0 7px 24px #0004}
-.brandmark{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:#06130b;border:1px solid rgba(99,255,99,.35);box-shadow:0 0 24px rgba(65,255,73,.24)}.brandmark svg{width:39px;height:39px}.top b{font-size:19px;letter-spacing:.1px}.top b .accent{color:var(--green)}.sub{font-size:12px;color:#b8cbb9}.tabs{display:flex;position:fixed;bottom:0;left:0;right:0;background:linear-gradient(180deg,#0a140d,#07100a);padding:7px 6px 10px;z-index:6;border-top:1px solid rgba(126,255,105,.10);box-shadow:0 -8px 24px #0003}.tabs button{flex:1;background:none;color:#aebcad;border:0;padding:8px 4px;border-radius:16px}.tabs .on{color:#aaff72;background:radial-gradient(circle at 50% 0,rgba(111,255,97,.17),transparent 68%)}.wrap{padding:14px 12px 90px;max-width:760px;margin:auto}.screen{display:none}.screen.on{display:block}
-.card{position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(5,20,12,.95),rgba(8,29,16,.96));border:1px solid var(--line);border-radius:25px;padding:16px;margin-bottom:14px;box-shadow:0 13px 34px #0003,0 0 0 1px rgba(95,255,92,.05) inset,0 0 30px rgba(56,255,74,.07)}.card:after{content:"";position:absolute;right:-45px;bottom:-45px;width:160px;height:160px;background:radial-gradient(circle,rgba(95,255,82,.20),transparent 70%);pointer-events:none}.card h3{margin:0 0 12px;font-size:21px;color:#fff}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.grow{flex:1}.f,button,textarea,select{border:1px solid rgba(170,255,158,.18);border-radius:16px;padding:12px;background:rgba(10,28,17,.78);color:#effff0}.f:focus,textarea:focus,select:focus{outline:none;border-color:rgba(132,255,103,.55);box-shadow:0 0 0 3px rgba(103,255,91,.11)}button{font-weight:750}.primary{background:linear-gradient(180deg,var(--green2),var(--green));color:#08240a;border-color:rgba(183,255,139,.45);box-shadow:0 0 24px rgba(102,239,91,.24)}textarea{width:100%;min-height:120px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;line-height:1.32;resize:vertical}.pill{background:rgba(36,91,34,.72);border:1px solid rgba(147,255,119,.18);border-radius:999px;padding:7px 11px;font-size:12px}.contact{display:flex;gap:10px;align-items:center;padding:11px 2px;border-bottom:1px solid rgba(255,255,255,.07)}.avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,#16391e,#0c2012);color:#dffff0;font-weight:900;border:1px solid rgba(129,255,104,.18)}.contact button{background:rgba(255,255,255,.06);color:#ddf0de}.chat{height:48vh;overflow:auto;background:rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.05);border-radius:18px;padding:10px}.b{max-width:82%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.06);border-radius:17px;padding:9px 11px;margin:7px 0;color:#fff}.b.me{margin-left:auto;background:linear-gradient(180deg,#214f22,#153a18);border-color:rgba(126,255,100,.17)}.time{font-size:10px;color:#acc0ac;margin-left:8px}.composer{display:flex;gap:8px;margin-top:9px}.composer input{flex:1}.notice{font-size:12px;background:rgba(255,255,255,.06);border:1px solid rgba(151,255,130,.10);padding:11px;border-radius:16px;margin:8px 0;color:#c8d8c9}.state{font-size:12px;color:#b7cbb8;margin-top:9px;line-height:1.35}.videos{display:grid;grid-template-columns:1fr 1fr;gap:8px}.videos video{width:100%;background:#020703;border-radius:17px;min-height:155px;border:1px solid rgba(128,255,107,.12)}.incoming{background:linear-gradient(180deg,#122116,#0e1a11);color:white;padding:12px;border-radius:16px;margin-bottom:10px;border:1px solid rgba(126,255,104,.15)}.hide{display:none}.online{color:#71ef68}
-#nick{min-width:180px}#status{min-width:150px}.card label.f{cursor:pointer}.card input::placeholder,.card textarea::placeholder{color:#8da18f}
-@media(max-width:560px){.wrap{padding:12px 10px 88px}.card{border-radius:21px;padding:14px}.top{padding:12px}.brandmark{width:44px;height:44px}.videos{grid-template-columns:1fr}}
-</style></head><body><div class="top"><div class="brandmark"><svg viewBox="0 0 108 108" aria-hidden="true"><rect width="108" height="108" rx="26" fill="#07140b"/><g stroke="#102015" stroke-width="4"><ellipse cx="54" cy="24" rx="13" ry="20" fill="#72F05D"/><ellipse cx="82" cy="40" rx="20" ry="13" transform="rotate(-24 82 40)" fill="#56E85B"/><ellipse cx="84" cy="69" rx="20" ry="13" transform="rotate(24 84 69)" fill="#64F05A"/><ellipse cx="58" cy="86" rx="13" ry="20" fill="#43D952"/><ellipse cx="28" cy="72" rx="20" ry="13" transform="rotate(-28 28 72)" fill="#FF4E4E"/><ellipse cx="27" cy="42" rx="20" ry="13" transform="rotate(28 27 42)" fill="#71F05B"/></g><circle cx="55" cy="55" r="11" fill="#F4DF43"/></svg></div><div><b><span>ICQ</span> <span class="accent">Reborn</span></b><div class="sub" id="head">локальный профиль</div></div></div><div class="wrap">
-<section id="contacts" class="screen on"><div class="card"><div class="row"><h3 class="grow">Мой UIN</h3><span id="uin" class="pill"></span></div><div class="row"><input id="nick" class="f grow" placeholder="Ник"><select id="status"><option>ONLINE</option><option>AWAY</option><option>DND</option><option>OCCUPIED</option><option>INVISIBLE</option></select><button id="save" class="primary">Сохранить</button></div></div><div class="card"><h3>Контакты</h3><div id="list"></div></div><div class="card"><h3>Синхронизация телефон ↔ телефон</h3><div class="notice"><b>Без центрального сервера нужен обмен двумя кодами.</b> Телефон A отправляет приглашение, телефон B создаёт ответ и отправляет его обратно. После применения ответа контакт синхронизируется автоматически.</div><textarea id="code" placeholder="Здесь будет приглашение или ответ синхронизации…"></textarea><div class="row"><button id="invite" class="primary">Новое приглашение</button><button id="pairAction" class="primary">Подключить код</button><button id="copy">Копировать</button><button id="share">Поделиться</button></div><div id="pair" class="state">Создаю приглашение…</div></div></section>
-<section id="chat" class="screen"><div class="card"><div class="row"><h3 id="chatTitle" class="grow">Чат</h3><span id="peer" class="pill">не подключён</span></div><div id="messages" class="chat"></div><div class="composer"><input id="msg" class="f" placeholder="Сообщение"><button id="send" class="primary">➤</button></div><div class="row"><label class="f">📎 Файл<input id="file" type="file" hidden></label><button id="voice">🎙️ Голосовое</button></div></div></section>
-<section id="calls" class="screen"><div id="incoming" class="incoming hide"><b id="incomingText">Входящий звонок</b><div class="row"><button id="take" class="primary">Принять</button><button id="reject">Отклонить</button></div></div><div class="card"><h3>Звонки</h3><div class="row"><button id="callA" class="primary">📞 Аудио</button><button id="callV" class="primary">🎥 Видео</button><button id="hang">Завершить</button><button id="mute">🎙️</button><button id="cam">📷</button></div><div id="callState" class="state">нет соединения</div><div class="videos"><video id="remote" autoplay playsinline></video><video id="local" autoplay muted playsinline></video></div></div></section>
-<section id="settings" class="screen"><div class="card"><h3>Настройки</h3><label><input id="stun" type="checkbox" checked> STUN для Wi‑Fi / мобильного интернета</label><br><br><label><input id="bg" type="checkbox" checked> Фоновое P2P‑соединение</label><div class="notice">Приложение сначала пробует прямой P2P. Если NAT/CGNAT/VPN мешает, WebRTC может выбрать TURN Relay автоматически. Переписка хранится только на телефонах.</div><button id="wipe">Очистить локальные данные</button></div></section></div>
-<div class="tabs"><button class="on" data-s="contacts">Контакты</button><button data-s="chat">Чат</button><button data-s="calls">Звонки</button><button data-s="settings">⚙</button></div><script>
-'use strict';const $=x=>document.getElementById(x),j=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(_){return d}},sv=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
-function uin(){let a=new Uint32Array(1);crypto.getRandomValues(a);return String(10000000+a[0]%90000000)}function id(){return crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random()}let me=j('me',null)||{uin:uin(),nick:'Пользователь',status:'ONLINE'},contacts=j('contacts',[]),sel=localStorage.getItem('sel')||'',pc=null,dc=null,peer=null,pending=null,ls=null,rs=null,rec=null,chunks=[],incoming=new Map(),ac=null,ring=null;
-function ctx(){if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();ac.resume?.();return ac}function t(f,d=.08,z=0){try{let c=ctx(),o=c.createOscillator(),g=c.createGain(),n=c.currentTime+z;o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.001,n);g.gain.exponentialRampToValueAtTime(.09,n+.008);g.gain.exponentialRampToValueAtTime(.001,n+d);o.connect(g).connect(c.destination);o.start(n);o.stop(n+d+.02)}catch(_){}}function beep(k){stopRing();let m={in:[[880,.06,0],[1175,.09,.07]],out:[[660,.05,0],[880,.06,.06]],ok:[[523,.06,0],[659,.06,.06],[784,.1,.13]],err:[[220,.12,0],[180,.15,.12]],end:[[520,.07,0],[390,.12,.07]]};(m[k]||[]).forEach(x=>t(...x))}function startRing(kind){stopRing();let p=()=>{if(kind==='in'){t(740,.18,0);t(980,.18,.23)}else{t(440,.22,0);t(523,.22,.3)}};p();ring=setInterval(p,1700)}function stopRing(){if(ring)clearInterval(ring);ring=null}
-function enc(o){return'ICQ1.'+btoa(unescape(encodeURIComponent(JSON.stringify(o))))}function dec(s){let v=String(s||'').trim().replace(/\s+/g,'');const p='ICQ1.';if(!v.startsWith(p))throw Error('Неверный код ICQ Reborn');let b=v.slice(p.length);while(b.length%4)b+='=';try{return JSON.parse(decodeURIComponent(escape(atob(b))))}catch(_){throw Error('Код приглашения повреждён или скопирован не полностью')}}function html(s){return String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}function hist(u){return j('h.'+u,[])}function add(u,m){let h=hist(u);h.push(m);if(h.length>500)h=h.slice(-500);sv('h.'+u,h);drawChat()}
-function show(n){document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('on',x.id===n));document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x.dataset.s===n));if(n==='chat')drawChat()}document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.s));
-function up(c){if(!c?.uin)return;let i=contacts.findIndex(x=>x.uin===c.uin);if(i<0)contacts.push(c);else contacts[i]={...contacts[i],...c};sv('contacts',contacts);drawContacts()}function drawContacts(){$('uin').textContent=me.uin;$('nick').value=me.nick;$('status').value=me.status;$('head').textContent=me.nick+' · '+me.uin;let e=$('list');e.innerHTML='';contacts.forEach(c=>{let d=document.createElement('div');d.className='contact';d.innerHTML='<div class="avatar">'+html((c.nick||'?')[0])+'</div><div class="grow"><b>'+html(c.nick||c.uin)+'</b><div class="state">UIN '+html(c.uin)+' · '+html(c.status||'OFFLINE')+'</div></div><button>Чат</button>';d.querySelector('button').onclick=()=>{sel=c.uin;localStorage.setItem('sel',sel);show('chat')};e.appendChild(d)})}
-function drawChat(){let c=contacts.find(x=>x.uin===sel);$('chatTitle').textContent=c?(c.nick+' · '+c.uin):'Чат';let e=$('messages');e.innerHTML='';if(!sel)return;hist(sel).forEach(m=>{let d=document.createElement('div');d.className='b'+(m.mine?' me':'');d.innerHTML=html(m.text)+(m.name?'<br>📎 '+html(m.name):'')+'<span class="time">'+new Date(m.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'</span>';e.appendChild(d)});e.scrollTop=e.scrollHeight}
-async function hmacSha1Base64(secret,message){let e=new TextEncoder(),k=await crypto.subtle.importKey('raw',e.encode(secret),{name:'HMAC',hash:'SHA-1'},false,['sign']),sig=await crypto.subtle.sign('HMAC',k,e.encode(message)),a=new Uint8Array(sig),s='';for(let x of a)s+=String.fromCharCode(x);return btoa(s)}
-async function config(){if(!$('stun').checked)return{iceServers:[],iceCandidatePoolSize:0,iceTransportPolicy:'all'};let exp=Math.floor(Date.now()/1000)+86400,user=exp+':'+me.uin,cred=await hmacSha1Base64('openrelayprojectsecret',user);return{iceServers:[
-{urls:['stun:stun.cloudflare.com:3478','stun:stun.l.google.com:19302','stun:openrelay.metered.ca:80']},
-{urls:'turn:staticauth.openrelay.metered.ca:80',username:user,credential:cred},
-{urls:'turn:staticauth.openrelay.metered.ca:80?transport=tcp',username:user,credential:cred},
-{urls:'turn:staticauth.openrelay.metered.ca:443',username:user,credential:cred},
-{urls:'turns:staticauth.openrelay.metered.ca:443?transport=tcp',username:user,credential:cred}
-],iceCandidatePoolSize:8,iceTransportPolicy:'all'}}
-async function routeLabel(){try{let st=await pc.getStats(),pair=null;st.forEach(r=>{if(r.type==='transport'&&r.selectedCandidatePairId)pair=st.get(r.selectedCandidatePairId)});if(!pair)st.forEach(r=>{if(r.type==='candidate-pair'&&r.state==='succeeded'&&r.nominated)pair=r});if(!pair)return'connected';let lc=st.get(pair.localCandidateId),rc=st.get(pair.remoteCandidateId),relay=lc?.candidateType==='relay'||rc?.candidateType==='relay';return relay?'Relay':'P2P'}catch(_){return'connected'}}
-async function mk(){pc=new RTCPeerConnection(await config());pc.ondatachannel=e=>chan(e.channel);pc.ontrack=e=>{if(!rs)rs=new MediaStream();rs.addTrack(e.track);$('remote').srcObject=rs};pc.oniceconnectionstatechange=async()=>{let s=pc.iceConnectionState;if(s==='connected'||s==='completed'){let r=await routeLabel();$('pair').textContent='ICE '+s+' · маршрут: '+r;$('peer').textContent=r}else if(s==='checking'){$('pair').textContent='ICE: проверяю прямой путь и relay…'}else if(s==='failed'){$('pair').textContent='ICE failed даже с relay. Проверь интернет/VPN и создай новое приглашение.'}};pc.onconnectionstatechange=async()=>{let s=pc.connectionState;$('callState').textContent=s;if(s==='connected'){let r=await routeLabel();$('peer').textContent=r;beep('ok');$('pair').textContent='Соединение установлено · '+r+'. Выполняю синхронизацию…'}if(s==='failed')$('pair').textContent='Соединение не установлено даже через TURN. Создай новое приглашение.'};return pc}
-let keepTimer=null;function stopKeep(){if(keepTimer)clearInterval(keepTimer);keepTimer=null}function startKeep(){stopKeep();keepTimer=setInterval(()=>{if(dc?.readyState==='open'){try{send({type:'ping',ts:Date.now()})}catch(_){}}},10000)}function chan(c){dc=c;c.onopen=()=>{startKeep();send({type:'hello',me,protocol:4});$('pair').textContent='P2P-канал открыт. Обмениваюсь профилем…'};c.onmessage=e=>recv(e.data);c.onclose=()=>{stopKeep();$('peer').textContent='не подключён';if(peer?.uin)up({...peer,status:'OFFLINE'})};c.onerror=()=>{$('pair').textContent='Ошибка P2P-канала. Если включён VPN, попробуй проверить без него.'}}
-function send(o){if(dc?.readyState!=='open')throw Error('Нет P2P соединения');dc.send(JSON.stringify(o))}
-function ice(){if(pc.iceGatheringState==='complete')return Promise.resolve();return new Promise(r=>{let done=false,timer;let finish=()=>{if(done)return;done=true;clearTimeout(timer);pc.removeEventListener('icegatheringstatechange',f);r()};let f=()=>{if(pc.iceGatheringState==='complete')finish()};pc.addEventListener('icegatheringstatechange',f);timer=setTimeout(finish,12000)})}
-async function makeInvite(){try{pc?.close();pc=null;dc=null;peer=null;$('pair').textContent='Создаю приглашение и собираю сетевые адреса…';await mk();chan(pc.createDataChannel('icq-sync'));await pc.setLocalDescription(await pc.createOffer());await ice();$('code').value=enc({kind:'offer',from:me,sdp:pc.localDescription});$('pair').textContent='Шаг 1/2: приглашение готово. Отправь этот код второму телефону.'}catch(e){$('pair').textContent='Не удалось создать приглашение: '+e.message}}
-async function processPairCode(){try{let raw=$('code').value.trim();if(!raw)throw Error('Вставь код');let p=dec(raw);if(p.kind==='offer'){pc?.close();pc=null;dc=null;peer=p.from;$('pair').textContent='Приглашение принято. Создаю ответ синхронизации…';await mk();await pc.setRemoteDescription(p.sdp);await pc.setLocalDescription(await pc.createAnswer());await ice();$('code').value=enc({kind:'answer',from:me,sdp:pc.localDescription});$('pair').textContent='Шаг 2/2: ответ готов. Отправь этот код обратно создателю приглашения.';NativeBridge.toast('Ответ синхронизации готов')}else if(p.kind==='answer'){if(!pc||pc.signalingState==='closed')throw Error('Исходное приглашение уже не активно. Нажми «Новое приглашение» и повтори обмен кодами.');peer=p.from;$('pair').textContent='Ответ принят. Устанавливаю прямое соединение…';await pc.setRemoteDescription(p.sdp)}else throw Error('Неизвестный тип кода')}catch(e){$('pair').textContent='Ошибка синхронизации: '+e.message;beep('err')}}
-$('invite').onclick=makeInvite;$('pairAction').onclick=processPairCode;
-function recv(raw){let m;try{m=JSON.parse(raw)}catch(_){return}if(m.type==='ping'){try{send({type:'pong',ts:m.ts})}catch(_){}return}if(m.type==='pong')return;if(m.type==='hello'){peer={...m.me,status:m.me?.status||'ONLINE'};up(peer);sel=peer.uin;localStorage.setItem('sel',sel);$('pair').textContent='Синхронизация завершена: '+(peer.nick||peer.uin)+' · UIN '+peer.uin;try{send({type:'syncAck',me,protocol:4})}catch(_){}beep('ok');return}if(m.type==='syncAck'){peer={...m.me,status:m.me?.status||'ONLINE'};up(peer);sel=peer.uin;localStorage.setItem('sel',sel);$('pair').textContent='Синхронизация завершена: '+(peer.nick||peer.uin)+' · UIN '+peer.uin;beep('ok');return}if(m.type==='chat'){peer={uin:m.uin,nick:m.nick,status:'ONLINE'};up(peer);add(m.uin,{text:m.text,ts:m.ts,mine:false});beep('in');return}if(m.type==='callOffer'){pending=m;$('incomingText').textContent='Входящий '+(m.mode==='video'?'видеозвонок':'аудиозвонок');$('incoming').classList.remove('hide');startRing('in');return}if(m.type==='callAnswer'){stopRing();pc.setRemoteDescription(m.sdp);$('callState').textContent='идёт звонок';return}if(m.type==='hang'){stopMedia();beep('end');return}if(m.type==='meta'){incoming.set(m.id,{...m,c:new Array(m.total),n:0});return}if(m.type==='chunk'){let f=incoming.get(m.id);if(!f)return;if(f.c[m.i]==null){f.c[m.i]=m.d;f.n++}if(f.n===f.total){add(m.uin||peer?.uin,{text:'Получен файл',name:f.name,ts:Date.now(),mine:false});incoming.delete(m.id);beep('in')}}}
-$('send').onclick=()=>{let x=$('msg'),v=x.value.trim();if(!v||!sel)return;try{send({type:'chat',text:v,uin:me.uin,nick:me.nick,ts:Date.now()});add(sel,{text:v,ts:Date.now(),mine:true});x.value='';beep('out')}catch(e){NativeBridge.toast(e.message)}};$('msg').onkeydown=e=>{if(e.key==='Enter')$('send').click()};
-async function blob(b,name){if(b.size>5*1024*1024)throw Error('Файл до 5 МБ');let a=new Uint8Array(await b.arrayBuffer()),cs=7000,total=Math.ceil(a.length/cs),fid=id();send({type:'meta',id:fid,name,total,uin:me.uin});for(let i=0;i<total;i++){let q=a.slice(i*cs,Math.min(a.length,(i+1)*cs)),s='';q.forEach(x=>s+=String.fromCharCode(x));send({type:'chunk',id:fid,i,d:btoa(s),uin:me.uin})}add(sel,{text:'Отправлен файл',name,ts:Date.now(),mine:true})}$('file').onchange=async e=>{let f=e.target.files?.[0];if(f)try{await blob(f,f.name)}catch(x){NativeBridge.toast(x.message)}e.target.value=''};$('voice').onclick=async()=>{if(rec?.state==='recording'){rec.stop();$('voice').textContent='🎙️ Голосовое';return}try{let s=await navigator.mediaDevices.getUserMedia({audio:true});chunks=[];rec=new MediaRecorder(s);rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};rec.onstop=async()=>{s.getTracks().forEach(t=>t.stop());try{await blob(new Blob(chunks,{type:'audio/webm'}),'voice.webm')}catch(e){NativeBridge.toast(e.message)}};rec.start();$('voice').textContent='⏹ Стоп'}catch(e){NativeBridge.toast('Нет доступа к микрофону')}};
-async function media(video){ls?.getTracks().forEach(t=>t.stop());ls=await navigator.mediaDevices.getUserMedia({audio:true,video:video?{facingMode:'user'}:false});$('local').srcObject=ls;for(let tr of ls.getTracks()){let s=pc.getSenders().find(x=>x.track?.kind===tr.kind);if(s)await s.replaceTrack(tr);else pc.addTrack(tr,ls)}}async function call(mode){if(dc?.readyState!=='open')return NativeBridge.toast('Сначала подключи контакт');try{await media(mode==='video');await pc.setLocalDescription(await pc.createOffer());send({type:'callOffer',mode,sdp:pc.localDescription});startRing('out');show('calls')}catch(e){NativeBridge.toast(e.message)}}$('callA').onclick=()=>call('audio');$('callV').onclick=()=>call('video');$('take').onclick=async()=>{stopRing();$('incoming').classList.add('hide');try{await pc.setRemoteDescription(pending.sdp);await media(pending.mode==='video');await pc.setLocalDescription(await pc.createAnswer());send({type:'callAnswer',sdp:pc.localDescription});pending=null;$('callState').textContent='идёт звонок'}catch(e){NativeBridge.toast(e.message)}};$('reject').onclick=()=>{stopRing();$('incoming').classList.add('hide');send({type:'hang'});pending=null};function stopMedia(){stopRing();ls?.getTracks().forEach(t=>t.stop());rs?.getTracks().forEach(t=>t.stop());ls=rs=null;$('local').srcObject=$('remote').srcObject=null}$('hang').onclick=()=>{try{send({type:'hang'})}catch(_){}stopMedia();beep('end')};$('mute').onclick=()=>{let t=ls?.getAudioTracks()[0];if(t){t.enabled=!t.enabled;$('mute').textContent=t.enabled?'🎙️':'🔇'}};$('cam').onclick=()=>{let t=ls?.getVideoTracks()[0];if(t){t.enabled=!t.enabled;$('cam').textContent=t.enabled?'📷':'🚫'}};
-$('save').onclick=()=>{me.nick=$('nick').value.trim()||'Пользователь';me.status=$('status').value;sv('me',me);drawContacts();if(dc?.readyState==='open')send({type:'hello',me})};$('copy').onclick=()=>NativeBridge.copy($('code').value);$('share').onclick=()=>NativeBridge.share($('code').value);$('bg').onchange=()=>NativeBridge.bg($('bg').checked);$('wipe').onclick=()=>{if(confirm('Удалить локальные данные ICQ Reborn?')){localStorage.clear();location.reload()}};drawContacts();drawChat();try{NativeBridge.bg(true)}catch(_){}setTimeout(()=>{beep('ok');makeInvite()},400);
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#e7ebe3,#dbe2d8);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh}button,input,textarea,select{font:inherit}.hide{display:none!important}
+.top{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,#07110b,#0a140d);padding:14px 16px;display:flex;gap:12px;align-items:center;box-shadow:0 7px 24px #0004}.logo{font-size:30px}.top b{font-size:19px}.accent{color:var(--green)}.sub{font-size:12px;color:#b8cbb9}.wrap{padding:14px 12px 92px;max-width:760px;margin:auto}.screen{display:none}.screen.on{display:block}
+.card{background:linear-gradient(180deg,rgba(5,20,12,.96),rgba(8,29,16,.97));border:1px solid var(--line);border-radius:24px;padding:16px;margin-bottom:14px;box-shadow:0 13px 34px #0003}.card h3{margin:0 0 12px}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.grow{flex:1}.f,button,textarea,select{border:1px solid rgba(170,255,158,.18);border-radius:16px;padding:12px;background:rgba(10,28,17,.80);color:#effff0}.f:focus,textarea:focus,select:focus{outline:none;border-color:#7cff68}.primary{background:linear-gradient(180deg,var(--green2),var(--green));color:#08240a;font-weight:800}.danger{background:#5b2020;color:#ffdada}.pill{background:rgba(36,91,34,.72);border-radius:999px;padding:7px 11px;font-size:12px}.state{font-size:12px;color:#b7cbb8;margin-top:8px}.notice{font-size:12px;background:rgba(255,255,255,.06);padding:11px;border-radius:15px;color:#c8d8c9}.contact{display:flex;gap:10px;align-items:center;padding:11px 2px;border-bottom:1px solid rgba(255,255,255,.07)}.avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#14351d;font-weight:900}.chat{height:48vh;overflow:auto;background:rgba(0,0,0,.15);border-radius:18px;padding:10px}.b{max-width:82%;background:rgba(255,255,255,.07);border-radius:17px;padding:9px 11px;margin:7px 0}.b.me{margin-left:auto;background:#19451d}.time{font-size:10px;color:#acc0ac;margin-left:8px}.composer{display:flex;gap:8px;margin-top:9px}.composer input{flex:1}.videos{display:grid;grid-template-columns:1fr 1fr;gap:8px}.videos video{width:100%;background:#020703;border-radius:17px;min-height:155px}.tabs{display:flex;position:fixed;bottom:0;left:0;right:0;background:#07100a;padding:7px 6px 10px;z-index:6}.tabs button{flex:1;background:none;color:#aebcad;border:0;padding:8px 4px;border-radius:16px}.tabs .on{color:#aaff72;background:rgba(92,255,84,.08)}
+.auth{max-width:520px;margin:36px auto}.auth .logoBig{font-size:46px;text-align:center}.auth h2{text-align:center;margin-top:8px}
+@media(max-width:560px){.wrap{padding:12px 10px 88px}.card{border-radius:21px}.videos{grid-template-columns:1fr}}
+</style></head><body>
+<div id="authView" class="wrap auth">
+  <div class="logoBig">🌼</div><h2>ICQ <span class="accent">Reborn</span></h2>
+  <div class="card">
+    <h3>Сервер</h3><input id="authServer" class="f" style="width:100%" placeholder="http://192.168.1.50:8080">
+    <div class="notice" style="margin-top:8px">Впиши IPv4 компьютера, на котором запущен ICQ Reborn Server.</div>
+  </div>
+  <div class="card" id="loginCard">
+    <h3>Вход</h3><input id="loginUin" class="f" style="width:100%" placeholder="UIN"><input id="loginPass" class="f" style="width:100%;margin-top:8px" type="password" placeholder="Пароль">
+    <div class="row" style="margin-top:10px"><button id="loginBtn" class="primary grow">Войти</button><button id="showReg" class="grow">Регистрация</button></div>
+    <div id="authState" class="state"></div>
+  </div>
+  <div class="card hide" id="regCard">
+    <h3>Регистрация</h3><input id="regNick" class="f" style="width:100%" placeholder="Ник"><input id="regPass" class="f" style="width:100%;margin-top:8px" type="password" placeholder="Пароль, минимум 6 символов">
+    <div class="row" style="margin-top:10px"><button id="regBtn" class="primary grow">Создать аккаунт</button><button id="showLogin" class="grow">Назад</button></div>
+  </div>
+</div>
+
+<div id="appView" class="hide">
+<div class="top"><span class="logo">🌼</span><div><b>ICQ <span class="accent">Reborn</span></b><div class="sub" id="head">подключение...</div></div><span class="grow"></span><span id="serverState" class="pill">offline</span></div>
+<div class="wrap">
+<section id="contacts" class="screen on">
+ <div class="card"><div class="row"><h3 class="grow">Мой UIN</h3><span id="uin" class="pill"></span></div><div class="row"><input id="nick" class="f grow"><select id="status"><option>ONLINE</option><option>AWAY</option><option>DND</option><option>OCCUPIED</option><option>INVISIBLE</option></select><button id="save" class="primary">Сохранить</button></div></div>
+ <div class="card"><div class="row"><h3 class="grow">Контакты</h3><input id="addUin" class="f" placeholder="UIN пользователя"><button id="addBtn" class="primary">Добавить</button></div><div id="list"></div></div>
+</section>
+<section id="chat" class="screen"><div class="card"><div class="row"><h3 id="chatTitle" class="grow">Чат</h3><span id="peer" class="pill">сервер</span></div><div id="messages" class="chat"></div><div class="composer"><input id="msg" class="f" placeholder="Сообщение"><button id="send" class="primary">➤</button></div></div></section>
+<section id="calls" class="screen"><div id="incoming" class="card hide"><b id="incomingText">Входящий звонок</b><div class="row" style="margin-top:8px"><button id="take" class="primary">Принять</button><button id="reject" class="danger">Отклонить</button></div></div><div class="card"><h3>Звонки</h3><div class="row"><button id="callA" class="primary">📞 Аудио</button><button id="callV" class="primary">🎥 Видео</button><button id="hang">Завершить</button><button id="mute">🎙️</button><button id="cam">📷</button></div><div id="callState" class="state">ожидание</div><div class="videos"><video id="remote" autoplay playsinline></video><video id="local" autoplay muted playsinline></video></div></div></section>
+<section id="settings" class="screen"><div class="card"><h3>Сервер</h3><input id="serverUrl" class="f" style="width:100%"><div class="row" style="margin-top:8px"><button id="saveServer" class="primary">Сохранить адрес</button><button id="logout">Выйти</button></div><div class="notice" style="margin-top:8px">Для домашнего Wi‑Fi укажи адрес вида http://192.168.1.50:8080. Для доступа из мобильной сети сервер должен быть доступен из Интернета.</div></div></section>
+</div>
+<div class="tabs"><button class="on" data-s="contacts">Контакты</button><button data-s="chat">Чат</button><button data-s="calls">Звонки</button><button data-s="settings">⚙</button></div>
+</div>
+
+<script>
+'use strict';
+const $=x=>document.getElementById(x);
+let base=(localStorage.getItem('serverUrl')||'').replace(/\/$/,'');
+let token=localStorage.getItem('token')||'';
+let me=null,contacts=[],sel='',ws=null,pc=null,ls=null,rs=null,pendingCall=null;
+
+function toast(s){try{NativeBridge.toast(s)}catch(_){alert(s)}}
+function authHeaders(){return token?{'Authorization':'Bearer '+token}:{}}
+async function api(path,opt={}){
+  if(!base)throw Error('Укажи адрес сервера');
+  const r=await fetch(base+path,{...opt,headers:{'Content-Type':'application/json',...authHeaders(),...(opt.headers||{})}});
+  let d={};try{d=await r.json()}catch(_){}
+  if(!r.ok)throw Error(d.error||('HTTP '+r.status));
+  return d;
+}
+function wsUrl(){
+  let u=new URL(base);
+  return (u.protocol==='https:'?'wss:':'ws:')+'//'+u.host+'/ws?token='+encodeURIComponent(token);
+}
+function showAuth(){
+  $('authView').classList.remove('hide');$('appView').classList.add('hide');$('authServer').value=base;$('serverUrl').value=base;
+}
+function showApp(){
+  $('authView').classList.add('hide');$('appView').classList.remove('hide');$('serverUrl').value=base;
+}
+function show(n){document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('on',x.id===n));document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x.dataset.s===n));if(n==='chat')loadChat()}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.s));
+
+async function afterAuth(user){
+  me=user;showApp();renderMe();await loadContacts();connectWs();
+}
+function renderMe(){
+  $('uin').textContent=me?.uin||'';$('nick').value=me?.nick||'';$('status').value=me?.status||'ONLINE';$('head').textContent=(me?.nick||'')+' · '+(me?.uin||'');
+}
+async function loadContacts(){
+  contacts=await api('/api/contacts');renderContacts();
+}
+function renderContacts(){
+  const e=$('list');e.innerHTML='';
+  if(!contacts.length)e.innerHTML='<div class="state">Контактов пока нет.</div>';
+  contacts.forEach(c=>{
+    const d=document.createElement('div');d.className='contact';
+    d.innerHTML='<div class="avatar">'+((c.nick||'?')[0])+'</div><div class="grow"><b>'+esc(c.nick)+'</b><div class="state">UIN '+esc(c.uin)+' · '+esc(c.status)+'</div></div><button>Чат</button>';
+    d.querySelector('button').onclick=()=>{sel=c.uin;show('chat')};e.appendChild(d);
+  });
+}
+function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+async function loadChat(){
+  if(!sel){$('chatTitle').textContent='Чат';$('messages').innerHTML='<div class="state">Выбери контакт.</div>';return}
+  const c=contacts.find(x=>x.uin===sel);$('chatTitle').textContent=(c?.nick||sel)+' · '+sel;
+  const list=await api('/api/messages/'+encodeURIComponent(sel));renderMessages(list);
+}
+function renderMessages(list){
+  const e=$('messages');e.innerHTML='';
+  for(const m of list){const d=document.createElement('div');d.className='b'+(m.from===me.uin?' me':'');d.innerHTML=esc(m.text)+'<span class="time">'+new Date(m.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'</span>';e.appendChild(d)}
+  e.scrollTop=e.scrollHeight;
+}
+async function sendMessage(){
+  const x=$('msg'),text=x.value.trim();if(!text||!sel)return;
+  try{await api('/api/messages',{method:'POST',body:JSON.stringify({to:sel,text})});x.value='';await loadChat()}catch(e){toast(e.message)}
+}
+$('send').onclick=sendMessage;$('msg').onkeydown=e=>{if(e.key==='Enter')sendMessage()};
+
+function connectWs(){
+  try{ws?.close()}catch(_){}
+  try{
+    ws=new WebSocket(wsUrl());
+    ws.onopen=()=>{$('serverState').textContent='online'};
+    ws.onclose=()=>{$('serverState').textContent='offline';setTimeout(()=>{if(token)connectWs()},3000)};
+    ws.onerror=()=>{$('serverState').textContent='error'};
+    ws.onmessage=async ev=>{
+      let m;try{m=JSON.parse(ev.data)}catch(_){return}
+      if(m.type==='message'){await loadContacts();if(sel===m.message.from||sel===m.message.to)await loadChat();toast('Новое сообщение от '+(m.from?.nick||m.message.from))}
+      if(m.type==='presence'){const i=contacts.findIndex(x=>x.uin===m.user.uin);if(i>=0){contacts[i]=m.user;renderContacts()}}
+      if(m.type==='contact-added'){await loadContacts()}
+      if(m.type==='call-signal')handleSignal(m);
+    };
+  }catch(_){}
+}
+function wsSend(o){if(ws?.readyState!==1)throw Error('Нет соединения с сервером');ws.send(JSON.stringify(o))}
+
+$('loginBtn').onclick=async()=>{
+  try{base=$('authServer').value.trim().replace(/\/$/,'');localStorage.setItem('serverUrl',base);const r=await api('/api/login',{method:'POST',body:JSON.stringify({uin:$('loginUin').value.trim(),password:$('loginPass').value})});token=r.token;localStorage.setItem('token',token);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}
+};
+$('regBtn').onclick=async()=>{
+  try{base=$('authServer').value.trim().replace(/\/$/,'');localStorage.setItem('serverUrl',base);const r=await api('/api/register',{method:'POST',body:JSON.stringify({nick:$('regNick').value.trim(),password:$('regPass').value})});token=r.token;localStorage.setItem('token',token);toast('Твой UIN: '+r.user.uin);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}
+};
+$('showReg').onclick=()=>{$('loginCard').classList.add('hide');$('regCard').classList.remove('hide')};
+$('showLogin').onclick=()=>{$('regCard').classList.add('hide');$('loginCard').classList.remove('hide')};
+$('save').onclick=async()=>{try{me=await api('/api/me',{method:'PATCH',body:JSON.stringify({nick:$('nick').value.trim(),status:$('status').value})});renderMe()}catch(e){toast(e.message)}};
+$('addBtn').onclick=async()=>{try{await api('/api/contacts',{method:'POST',body:JSON.stringify({uin:$('addUin').value.trim()})});$('addUin').value='';await loadContacts()}catch(e){toast(e.message)}};
+$('saveServer').onclick=()=>{base=$('serverUrl').value.trim().replace(/\/$/,'');localStorage.setItem('serverUrl',base);toast('Адрес сохранён');if(token)connectWs()};
+$('logout').onclick=()=>{token='';localStorage.removeItem('token');try{ws?.close()}catch(_){}showAuth()};
+
+// WebRTC calls: signaling through server, media direct/relay
+async function rtcConfig(){return{iceServers:[{urls:['stun:stun.cloudflare.com:3478','stun:stun.l.google.com:19302']}]} }
+async function ensurePc(){
+  if(pc&&pc.connectionState!=='closed')return pc;
+  pc=new RTCPeerConnection(await rtcConfig());
+  pc.onicecandidate=e=>{if(e.candidate&&sel)wsSend({type:'call-signal',to:sel,signalType:'ice',payload:e.candidate})};
+  pc.ontrack=e=>{if(!rs)rs=new MediaStream();rs.addTrack(e.track);$('remote').srcObject=rs};
+  pc.onconnectionstatechange=()=>{$('callState').textContent=pc.connectionState};
+  return pc;
+}
+async function media(video){
+  ls?.getTracks().forEach(t=>t.stop());
+  ls=await navigator.mediaDevices.getUserMedia({audio:true,video:video?{facingMode:'user'}:false});
+  $('local').srcObject=ls;const p=await ensurePc();for(const tr of ls.getTracks())p.addTrack(tr,ls);
+}
+async function startCall(mode){
+  if(!sel)return toast('Выбери контакт');
+  try{await ensurePc();await media(mode==='video');const offer=await pc.createOffer();await pc.setLocalDescription(offer);wsSend({type:'call-signal',to:sel,signalType:'offer',payload:{sdp:pc.localDescription,mode}});$('callState').textContent='вызов';show('calls')}catch(e){toast(e.message)}
+}
+async function handleSignal(m){
+  if(!m.from)return;
+  if(m.signalType==='offer'){sel=m.from;pendingCall=m;$('incomingText').textContent='Входящий '+(m.payload.mode==='video'?'видеозвонок':'аудиозвонок');$('incoming').classList.remove('hide');show('calls');return}
+  await ensurePc();
+  if(m.signalType==='answer'){await pc.setRemoteDescription(m.payload);$('callState').textContent='соединение'}
+  if(m.signalType==='ice'){try{await pc.addIceCandidate(m.payload)}catch(_){}}
+  if(m.signalType==='hang'){stopCall()}
+}
+$('take').onclick=async()=>{try{$('incoming').classList.add('hide');await ensurePc();await pc.setRemoteDescription(pendingCall.payload.sdp);await media(pendingCall.payload.mode==='video');const ans=await pc.createAnswer();await pc.setLocalDescription(ans);wsSend({type:'call-signal',to:pendingCall.from,signalType:'answer',payload:pc.localDescription});pendingCall=null}catch(e){toast(e.message)}};
+$('reject').onclick=()=>{if(pendingCall)wsSend({type:'call-signal',to:pendingCall.from,signalType:'hang',payload:{}});$('incoming').classList.add('hide');pendingCall=null};
+function stopCall(){ls?.getTracks().forEach(t=>t.stop());rs?.getTracks().forEach(t=>t.stop());ls=rs=null;$('local').srcObject=$('remote').srcObject=null;try{pc?.close()}catch(_){}pc=null;$('callState').textContent='завершён'}
+$('hang').onclick=()=>{if(sel)try{wsSend({type:'call-signal',to:sel,signalType:'hang',payload:{}})}catch(_){}stopCall()};
+$('callA').onclick=()=>startCall('audio');$('callV').onclick=()=>startCall('video');
+$('mute').onclick=()=>{const t=ls?.getAudioTracks()[0];if(t){t.enabled=!t.enabled;$('mute').textContent=t.enabled?'🎙️':'🔇'}};
+$('cam').onclick=()=>{const t=ls?.getVideoTracks()[0];if(t){t.enabled=!t.enabled;$('cam').textContent=t.enabled?'📷':'🚫'}};
+
+(async()=>{
+  $('authServer').value=base;$('serverUrl').value=base;
+  if(token&&base){try{const user=await api('/api/me');await afterAuth(user)}catch(_){localStorage.removeItem('token');token='';showAuth()}}else showAuth();
+})();
 </script></body></html>
