@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.23.0-alpha
+
+- Added user profile avatars stored on the PC server.
+- Added avatar selection from the Android file/gallery picker.
+- Avatars are center-cropped and compressed before upload.
+- Added avatar removal and replacement from Settings.
+- Avatars now appear in profile, contacts, chat header and call screen.
+- Redesigned the call screen with a large avatar, name, connection state and round controls.
+- Preserved v0.22 foreground notification behavior and call fixes.
+
 ## v0.22.0-alpha
 
 - Improved audio and video WebRTC call handling.
