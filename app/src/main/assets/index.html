@@ -9,9 +9,9 @@
 <div id="authView" class="wrap auth">
   <div class="logoBig">🌼</div><h2>ICQ <span class="accent">Reborn</span></h2>
   <div class="card">
-    <h3>Сервер</h3><input id="authServer" class="f" style="width:100%" placeholder="http://192.168.3.3:8080">
+    <h3>Сервер</h3><input id="authServer" class="f" style="width:100%" placeholder="http://192.168.3.3:22005">
     <div class="row" style="margin-top:8px"><button id="checkServer" class="primary grow">Проверить сервер</button><button id="useHomeServer" class="grow">192.168.3.3</button></div>
-    <div id="serverCheckState" class="state">Адрес по умолчанию: http://192.168.3.3:8080</div>
+    <div id="serverCheckState" class="state">Адрес по умолчанию: http://192.168.3.3:22005</div>
     <div class="notice" style="margin-top:8px">Телефон и ПК должны быть в одной сети Wi‑Fi для локального теста.</div>
   </div>
   <div class="card" id="loginCard">
@@ -34,7 +34,7 @@
 </section>
 <section id="chat" class="screen"><div class="card"><div class="row"><h3 id="chatTitle" class="grow">Чат</h3><span id="peer" class="pill">сервер</span></div><div id="messages" class="chat"></div><div class="composer"><input id="msg" class="f" placeholder="Сообщение"><button id="send" class="primary">➤</button></div></div></section>
 <section id="calls" class="screen"><div id="incoming" class="card hide"><b id="incomingText">Входящий звонок</b><div class="row" style="margin-top:8px"><button id="take" class="primary">Принять</button><button id="reject" class="danger">Отклонить</button></div></div><div class="card"><h3>Звонки</h3><div class="row"><button id="callA" class="primary">📞 Аудио</button><button id="callV" class="primary">🎥 Видео</button><button id="hang">Завершить</button><button id="mute">🎙️</button><button id="cam">📷</button></div><div id="callState" class="state">ожидание</div><div class="videos"><video id="remote" autoplay playsinline></video><video id="local" autoplay muted playsinline></video></div></div></section>
-<section id="settings" class="screen"><div class="card"><h3>Сервер</h3><input id="serverUrl" class="f" style="width:100%"><div class="row" style="margin-top:8px"><button id="saveServer" class="primary">Сохранить адрес</button><button id="logout">Выйти</button></div><div class="notice" style="margin-top:8px">Для домашнего Wi‑Fi укажи адрес вида http://192.168.1.50:8080. Для доступа из мобильной сети сервер должен быть доступен из Интернета.</div></div></section>
+<section id="settings" class="screen"><div class="card"><h3>Сервер</h3><input id="serverUrl" class="f" style="width:100%"><div class="row" style="margin-top:8px"><button id="saveServer" class="primary">Сохранить адрес</button><button id="logout">Выйти</button></div><div class="notice" style="margin-top:8px">Для домашнего Wi‑Fi укажи адрес вида http://192.168.1.50:22005. Для доступа из мобильной сети сервер должен быть доступен из Интернета.</div></div></section>
 </div>
 <div class="tabs"><button class="on" data-s="contacts">Контакты</button><button data-s="chat">Чат</button><button data-s="calls">Звонки</button><button data-s="settings">⚙</button></div>
 </div>
@@ -42,7 +42,7 @@
 <script>
 'use strict';
 const $=x=>document.getElementById(x);
-let base=(localStorage.getItem('serverUrl')||'http://192.168.3.3:8080').replace(/\/$/,'');
+let base=(localStorage.getItem('serverUrl')||'http://192.168.3.3:22005').replace(/\/$/,'');
 let token=localStorage.getItem('token')||'';
 let me=null,contacts=[],sel='',ws=null,pc=null,ls=null,rs=null,pendingCall=null;
 
@@ -122,7 +122,7 @@ function connectWs(){
 function wsSend(o){if(ws?.readyState!==1)throw Error('Нет соединения с сервером');ws.send(JSON.stringify(o))}
 
 async function checkServer(){
-  base=$('authServer').value.trim().replace(/\/$/,'')||'http://192.168.3.3:8080';
+  base=$('authServer').value.trim().replace(/\/$/,'')||'http://192.168.3.3:22005';
   localStorage.setItem('serverUrl',base);
   const el=$('serverCheckState');el.className='state';el.textContent='Проверяю '+base+' ...';
   try{
@@ -138,12 +138,12 @@ async function checkServer(){
   }
 }
 $('checkServer').onclick=checkServer;
-$('useHomeServer').onclick=()=>{$('authServer').value='http://192.168.3.3:8080';checkServer()};
+$('useHomeServer').onclick=()=>{$('authServer').value='http://192.168.3.3:22005';checkServer()};
 $('loginBtn').onclick=async()=>{
-  try{base=$('authServer').value.trim().replace(/\/$/,'')||'http://192.168.3.3:8080';localStorage.setItem('serverUrl',base);const r=await api('/api/login',{method:'POST',body:JSON.stringify({uin:$('loginUin').value.trim(),password:$('loginPass').value})});token=r.token;localStorage.setItem('token',token);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}
+  try{base=$('authServer').value.trim().replace(/\/$/,'')||'http://192.168.3.3:22005';localStorage.setItem('serverUrl',base);const r=await api('/api/login',{method:'POST',body:JSON.stringify({uin:$('loginUin').value.trim(),password:$('loginPass').value})});token=r.token;localStorage.setItem('token',token);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}
 };
 $('regBtn').onclick=async()=>{
-  try{base=$('authServer').value.trim().replace(/\/$/,'')||'http://192.168.3.3:8080';localStorage.setItem('serverUrl',base);const r=await api('/api/register',{method:'POST',body:JSON.stringify({nick:$('regNick').value.trim(),password:$('regPass').value})});token=r.token;localStorage.setItem('token',token);toast('Твой UIN: '+r.user.uin);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}
+  try{base=$('authServer').value.trim().replace(/\/$/,'')||'http://192.168.3.3:22005';localStorage.setItem('serverUrl',base);const r=await api('/api/register',{method:'POST',body:JSON.stringify({nick:$('regNick').value.trim(),password:$('regPass').value})});token=r.token;localStorage.setItem('token',token);toast('Твой UIN: '+r.user.uin);await afterAuth(r.user)}catch(e){$('authState').textContent=e.message}
 };
 $('showReg').onclick=()=>{$('loginCard').classList.add('hide');$('regCard').classList.remove('hide')};
 $('showLogin').onclick=()=>{$('regCard').classList.add('hide');$('loginCard').classList.remove('hide')};

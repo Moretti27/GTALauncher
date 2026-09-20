@@ -7,7 +7,7 @@ const bcrypt=require('bcryptjs');
 const jwt=require('jsonwebtoken');
 const {WebSocketServer}=require('ws');
 
-const PORT=Number(process.env.PORT||8080);
+const PORT=Number(process.env.PORT||22005);
 const JWT_SECRET=process.env.JWT_SECRET||'CHANGE_ME_ICQ_REBORN_SECRET';
 const DATA_DIR=path.join(__dirname,'data');
 const DB_FILE=path.join(DATA_DIR,'db.json');
@@ -48,7 +48,7 @@ const app=express();
 app.use(cors());
 app.use(express.json({limit:'2mb'}));
 
-app.get('/health',(req,res)=>res.json({ok:true,name:'ICQ Reborn Server',version:'0.14.0'}));
+app.get('/health',(req,res)=>res.json({ok:true,name:'ICQ Reborn Server',version:'0.16.0'}));
 
 app.post('/api/register',async(req,res)=>{
   try{
